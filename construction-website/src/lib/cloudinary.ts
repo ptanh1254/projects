@@ -8,7 +8,7 @@ cloudinary.config({
 
 export { cloudinary }
 
-// Helper function to delete image
+// xoas ảnh từ Cloudinary
 export async function deleteCloudinaryImage(publicId: string) {
   try {
     const result = await cloudinary.uploader.destroy(publicId)
@@ -19,7 +19,7 @@ export async function deleteCloudinaryImage(publicId: string) {
   }
 }
 
-// Generate optimized URL
+// lấy URL ảnh đã tối ưu từ Cloudinary
 export function getOptimizedUrl(publicId: string, options?: {
   width?: number
   height?: number

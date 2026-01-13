@@ -91,7 +91,7 @@ export const reorderServicesSchema = z.object({
   ).min(1, 'At least one service is required'),
 })
 
-// Image Reorder Schema (Admin)
+// 
 export const reorderImagesSchema = z.object({
   images: z.array(
     z.object({
@@ -101,14 +101,14 @@ export const reorderImagesSchema = z.object({
   ).min(1, 'At least one image is required'),
 })
 
-// Update Profile Schema (Admin)
+// câp nhật thông tin cá nhân (Admin)
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   avatar: z.string().url('Invalid avatar URL').optional().or(z.literal('')),
 })
 
-// Update Password Schema (Admin)
+// cập nhật mật khẩu (Admin)
 export const updatePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(8, 'New password must be at least 8 characters'),
@@ -118,7 +118,7 @@ export const updatePasswordSchema = z.object({
   path: ['confirmPassword'],
 })
 
-// Export types
+// Type Exports
 export type ContactFormData = z.infer<typeof contactSchema>
 export type QuoteFormData = z.infer<typeof quoteSchema>
 export type ProjectFormData = z.infer<typeof projectSchema>

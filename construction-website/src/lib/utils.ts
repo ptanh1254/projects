@@ -32,7 +32,7 @@ export function formatNumber(num: number): string {
   return num.toLocaleString('en-US')
 }
 
-// Truncate text
+// vercel --prod
 export function truncate(text: string, length: number): string {
   if (text.length <= length) return text
   return text.slice(0, length) + '...'
@@ -104,7 +104,7 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
   return { valid: true }
 }
 
-// Sanitize HTML to prevent XSS (basic implementation)
+// Sanitize HTML string
 export function sanitizeHtml(html: string): string {
   // Basic sanitization - remove script tags and event handlers
   return html

@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Container from '@/components/layout/Container'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -8,25 +11,6 @@ interface Service {
   slug: string
   shortDescription: string
   icon: string | null
-}
-
-async function getServices(): Promise<Service[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/services`, {
-      cache: 'no-store',
-    })
-
-    if (!res.ok) {
-      console.error('Failed to fetch services')
-      return []
-    }
-
-    return res.json()
-  } catch (error) {
-    console.error('Error fetching services:', error)
-    return []
-  }
 }
 
 // Default icon mapping
@@ -61,8 +45,40 @@ const getDefaultIcon = (slug: string) => {
   )
 }
 
-export default async function ServicesOverview() {
-  const services = await getServices()
+export default function ServicesOverview() {
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const res = await fetch('/api/services')
+        if (res.ok) {
+          const data = await res.json()
+          setServices(data)
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchServices()
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="section-padding">
+        <Container>
+          <div className="text-center">
+            <h2 className="section-title">Our Services</h2>
+            <p className="section-subtitle">Loading services...</p>
+          </div>
+        </Container>
+      </section>
+    )
+  }
 
   if (services.length === 0) {
     return (

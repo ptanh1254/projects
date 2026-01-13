@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Container from '@/components/layout/Container'
@@ -18,27 +21,40 @@ interface Project {
   images: ProjectImage[]
 }
 
-async function getFeaturedProjects(): Promise<Project[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/projects/featured`, {
-      cache: 'no-store',
-    })
+export default function FeaturedProjects() {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
 
-    if (!res.ok) {
-      console.error('Failed to fetch featured projects')
-      return []
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const res = await fetch('/api/projects/featured')
+        if (res.ok) {
+          const data = await res.json()
+          setProjects(data)
+        }
+      } catch (error) {
+        console.error('Error fetching featured projects:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    return res.json()
-  } catch (error) {
-    console.error('Error fetching featured projects:', error)
-    return []
-  }
-}
+    fetchProjects()
+  }, [])
 
-export default async function FeaturedProjects() {
-  const projects = await getFeaturedProjects()
+  if (loading) {
+    return (
+      <section className="section-padding bg-gray-50">
+        <Container>
+          <div className="text-center">
+            <h2 className="section-title">Featured Projects</h2>
+            <p className="section-subtitle">Loading projects...</p>
+          </div>
+        </Container>
+      </section>
+    )
+  }
 
   if (projects.length === 0) {
     return (
