@@ -2,7 +2,32 @@ import Link from 'next/link'
 import Container from '@/components/layout/Container'
 import Button from '@/components/ui/Button'
 
-export default function CTASection() {
+interface Settings {
+  phone: string
+  email: string
+  workingHours: string | null
+}
+
+async function getSettings(): Promise<Settings | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const res = await fetch(`${baseUrl}/api/settings`, {
+      cache: 'no-store',
+    })
+
+    if (!res.ok) {
+      return null
+    }
+
+    return res.json()
+  } catch (error) {
+    console.error('Error fetching settings:', error)
+    return null
+  }
+}
+
+export default async function CTASection() {
+  const settings = await getSettings()
   return (
     <section className="section-padding bg-gradient-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden">
       {/* Background pattern */}
@@ -39,20 +64,26 @@ export default function CTASection() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
                 <div className="text-blue-200 mb-2">Call Us</div>
-                <a href="tel:+1234567890" className="text-lg font-semibold hover:text-blue-200 transition-colors">
-                  (123) 456-7890
+                <a
+                  href={`tel:${settings?.phone || '+1234567890'}`}
+                  className="text-lg font-semibold hover:text-blue-200 transition-colors"
+                >
+                  {settings?.phone || '(123) 456-7890'}
                 </a>
               </div>
               <div>
                 <div className="text-blue-200 mb-2">Email Us</div>
-                <a href="mailto:info@construction.com" className="text-lg font-semibold hover:text-blue-200 transition-colors">
-                  info@construction.com
+                <a
+                  href={`mailto:${settings?.email || 'info@construction.com'}`}
+                  className="text-lg font-semibold hover:text-blue-200 transition-colors"
+                >
+                  {settings?.email || 'info@construction.com'}
                 </a>
               </div>
               <div>
                 <div className="text-blue-200 mb-2">Visit Us</div>
                 <div className="text-lg font-semibold">
-                  Mon - Fri, 8AM - 6PM
+                  {settings?.workingHours || 'Mon - Fri, 8AM - 6PM'}
                 </div>
               </div>
             </div>
