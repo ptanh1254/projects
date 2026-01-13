@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  category    String   // residential, commercial, industrial, renovation
+  location    String
+  area        Float?
+  duration    String?
+  client      String?
+  images      Image[]
+  featured    Boolean  @default(false)
+  status      String   @default("draft") // draft, published
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  shortDescription String   @db.VarChar(300)
+  description      String   @db.Text
+  icon             String?
+  imageUrl         String?
+  order            Int      @default(0)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Quote {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String
+  projectType String
+  location    String
+  area        Float?
+  budget      String?
+  timeline    String?
+  message     String?  @db.Text
+  fileUrl     String?
+  status      String   @default("new") // new, viewed, processed
+  adminNote   String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String   @db.Text
+  status    String   @default("unread") // unread, read
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  company   String?
+  content   String   @db.Text
+  rating    Int      @default(5)
+  imageUrl  String?
+  featured  Boolean  @default(false)
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id                String   @id @default(cuid())
+  companyName       String
+  tagline           String?
+  description       String?  @db.Text
+  email             String
+  phone             String
+  address           String
+  workingHours      String?
+  facebookUrl       String?
+  instagramUrl      String?
+  linkedinUrl       String?
+  youtubeUrl        String?
+  logoUrl           String?
+  faviconUrl        String?
+  googleMapsUrl     String?
+  metaTitle         String?
+  metaDescription   String?  @db.Text
+  googleAnalyticsId String?
+  updatedAt         DateTime @updatedAt
+}

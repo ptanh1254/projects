@@ -1,0 +1,49 @@
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/db'
+
+export async function GET(
+  request: Request,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const project = await prisma.project.findUnique({
+      where: { 
+        slug: params.slug,
+        status: 'published',
+      },
+      include: {
+        images: {
+          orderBy: { order: 'asc' },
+        },
+      },
+    })
+
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      )
+    }
+
+    // Get related projects
+    const relatedProjects = await prisma.project.findMany({
+      where: {
+        category: project.category,
+        status: 'published',
+        id: { not: project.id },
+      },
+      include: {
+        images: { take: 1 },
+      },
+      take: 4,
+    })
+
+    return NextResponse.json({ project, relatedProjects })
+  } catch (error) {
+    console.error('Error fetching project:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
