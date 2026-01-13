@@ -39,10 +39,11 @@ export default function QuotesPage() {
       const res = await fetch('/api/admin/quotes')
       if (res.ok) {
         const data = await res.json()
-        setQuotes(data)
+        setQuotes(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching quotes:', error)
+      setQuotes([])
     } finally {
       setLoading(false)
     }

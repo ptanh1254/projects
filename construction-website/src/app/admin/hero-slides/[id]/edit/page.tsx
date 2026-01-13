@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageUploader from '@/components/admin/ImageUploader'
 
-export default function EditHeroSlidePage({ params }: { params: { id: string } }) {
+export default function EditHeroSlidePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
+  const [slideId, setSlideId] = useState<string>('')
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -22,32 +23,43 @@ export default function EditHeroSlidePage({ params }: { params: { id: string } }
   })
 
   useEffect(() => {
-    fetchSlide()
-  }, [params.id])
+    async function fetchSlide() {
+      try {
+        const { id } = await params
+        setSlideId(id)
+        console.log('Fetching slide with ID:', id)
+        const res = await fetch(`/api/admin/hero-slides/${id}`)
+        console.log('Response status:', res.status)
 
-  const fetchSlide = async () => {
-    try {
-      const res = await fetch(`/api/admin/hero-slides/${params.id}`)
-      if (!res.ok) throw new Error('Failed to fetch slide')
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}))
+          console.error('Error response:', errorData)
+          throw new Error(errorData.error || 'Failed to fetch slide')
+        }
 
-      const data = await res.json()
-      setFormData({
-        title: data.title || '',
-        subtitle: data.subtitle || '',
-        buttonText: data.buttonText || '',
-        buttonLink: data.buttonLink || '',
-        imageUrl: data.imageUrl || null,
-        imagePublicId: data.imagePublicId || null,
-        order: data.order || 0,
-        active: data.active ?? true,
-      })
-    } catch (error) {
-      console.error('Error fetching slide:', error)
-      setError('Failed to load slide')
-    } finally {
-      setFetching(false)
+        const data = await res.json()
+        console.log('Slide data:', data)
+
+        setFormData({
+          title: data.title || '',
+          subtitle: data.subtitle || '',
+          buttonText: data.buttonText || '',
+          buttonLink: data.buttonLink || '',
+          imageUrl: data.imageUrl || null,
+          imagePublicId: data.imagePublicId || null,
+          order: data.order || 0,
+          active: data.active ?? true,
+        })
+      } catch (error: any) {
+        console.error('Error fetching slide:', error)
+        setError(error.message || 'Failed to load slide')
+      } finally {
+        setFetching(false)
+      }
     }
-  }
+
+    fetchSlide()
+  }, [params])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,7 +67,7 @@ export default function EditHeroSlidePage({ params }: { params: { id: string } }
     setLoading(true)
 
     try {
-      const res = await fetch(`/api/admin/hero-slides/${params.id}`, {
+      const res = await fetch(`/api/admin/hero-slides/${slideId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

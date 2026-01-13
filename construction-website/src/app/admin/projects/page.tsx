@@ -37,10 +37,11 @@ export default function ProjectsPage() {
       const res = await fetch('/api/admin/projects')
       if (res.ok) {
         const data = await res.json()
-        setProjects(data)
+        setProjects(data.projects || [])
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects([])
     } finally {
       setLoading(false)
     }

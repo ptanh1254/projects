@@ -123,6 +123,7 @@ model Settings {
   metaTitle         String?
   metaDescription   String?  @db.Text
   googleAnalyticsId String?
+  slideInterval     Int      @default(5000) // milliseconds between slides
   updatedAt         DateTime @updatedAt
 }
 

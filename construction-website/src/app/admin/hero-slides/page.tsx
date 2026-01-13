@@ -35,10 +35,11 @@ export default function HeroSlidesPage() {
       const res = await fetch('/api/admin/hero-slides')
       if (res.ok) {
         const data = await res.json()
-        setSlides(data)
+        setSlides(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching slides:', error)
+      setSlides([])
     } finally {
       setLoading(false)
     }
@@ -131,7 +132,7 @@ export default function HeroSlidesPage() {
                 {/* Image Preview */}
                 <div className="relative aspect-video bg-gradient-to-br from-blue-600 to-blue-800">
                   {slide.imageUrl ? (
-                    <Image src={slide.imageUrl} alt={slide.title} fill className="object-cover" />
+                    <Image src={slide.imageUrl} alt={slide.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover" />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-white/50">
                       <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -21,6 +21,7 @@ interface Settings {
   metaTitle: string
   metaDescription: string
   googleAnalyticsId: string
+  slideInterval: number
 }
 
 export default function SettingsPage() {
@@ -263,6 +264,32 @@ export default function SettingsPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="G-XXXXXXXXXX"
             />
+          </div>
+        </div>
+
+        {/* Hero Slider Settings */}
+        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+          <h2 className="text-lg font-semibold text-gray-900">Hero Slider Settings</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Slide Interval (seconds)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="60"
+              value={settings.slideInterval / 1000}
+              onChange={(e) => {
+                const seconds = parseInt(e.target.value) || 5
+                const newSettings = { ...settings, slideInterval: seconds * 1000 }
+                setSettings(newSettings as Settings)
+              }}
+              className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Time in seconds between automatic slide transitions (1-60 seconds)
+            </p>
           </div>
         </div>
 

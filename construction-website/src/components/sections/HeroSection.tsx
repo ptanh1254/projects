@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Container from '@/components/layout/Container'
-import Button from '@/components/ui/Button'
 
 interface HeroSlide {
   id: string
@@ -19,23 +18,32 @@ export default function HeroSection() {
   const [slides, setSlides] = useState<HeroSlide[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [slideInterval, setSlideInterval] = useState(5000)
 
   useEffect(() => {
-    async function fetchSlides() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/hero-slides')
-        if (res.ok) {
-          const data = await res.json()
+        // Fetch slides
+        const slidesRes = await fetch('/api/hero-slides')
+        if (slidesRes.ok) {
+          const data = await slidesRes.json()
           setSlides(data)
         }
+
+        // Fetch settings for slide interval
+        const settingsRes = await fetch('/api/settings')
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json()
+          setSlideInterval(settings.slideInterval || 5000)
+        }
       } catch (error) {
-        console.error('Error fetching hero slides:', error)
+        console.error('Error fetching data:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchSlides()
+    fetchData()
   }, [])
 
   useEffect(() => {
@@ -43,10 +51,10 @@ export default function HeroSection() {
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000) // Change slide every 5 seconds
+    }, slideInterval)
 
     return () => clearInterval(interval)
-  }, [slides.length])
+  }, [slides.length, slideInterval])
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
@@ -61,7 +69,7 @@ export default function HeroSection() {
   }
 
   // Default slide if no slides in database
-  const defaultSlide = {
+  const defaultSlide: HeroSlide = {
     id: 'default',
     title: 'We Build Your Dreams Into Reality',
     subtitle:
@@ -72,14 +80,55 @@ export default function HeroSection() {
   }
 
   const activeSlides = slides.length > 0 ? slides : [defaultSlide]
-  const currentSlideData = activeSlides[currentSlide]
+  const currentSlideData = activeSlides[currentSlide] || defaultSlide
 
   if (loading) {
     return (
-      <section className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden">
-        <Container className="relative">
-          <div className="py-20 md:py-28 lg:py-36">
-            <div className="text-center text-white/60">Loading...</div>
+      <section className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden min-h-screen flex items-center">
+        <Container className="relative w-full">
+          <div className="text-center text-white/60">Loading...</div>
+        </Container>
+      </section>
+    )
+  }
+
+  // Safety check - if no slide data, use default
+  if (!currentSlideData) {
+    return (
+      <section className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden min-h-screen flex items-center">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
+        </div>
+
+        <Container className="relative w-full">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6">
+              <span className="text-sm font-medium">Building Excellence Since 2000</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              {defaultSlide.title}
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl">
+              {defaultSlide.subtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-5">
+              <Link href={defaultSlide.buttonLink || '/quote'}>
+                <button className="px-8 py-4 bg-white text-blue-700 rounded-lg font-bold text-lg shadow-2xl hover:shadow-3xl hover:bg-blue-50 transform hover:scale-105 transition-all duration-300">
+                  {defaultSlide.buttonText}
+                </button>
+              </Link>
+              <Link href="/projects">
+                <button className="px-8 py-4 bg-transparent border-3 border-white text-white rounded-lg font-bold text-lg backdrop-blur-sm hover:bg-white hover:text-blue-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
+                  View Our Projects
+                </button>
+              </Link>
+            </div>
           </div>
         </Container>
       </section>
@@ -87,7 +136,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden">
+    <section className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden min-h-screen flex items-center">
       {/* Background Image */}
       {currentSlideData.imageUrl && (
         <div className="absolute inset-0">
@@ -95,10 +144,12 @@ export default function HeroSection() {
             src={currentSlideData.imageUrl}
             alt={currentSlideData.title}
             fill
-            className="object-cover"
+            sizes="100vw"
+            className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/80" />
+          {/* Subtle dark overlay only on left side for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
         </div>
       )}
 
@@ -114,22 +165,21 @@ export default function HeroSection() {
         </div>
       )}
 
-      <Container className="relative">
-        <div className="py-20 md:py-28 lg:py-36">
-          <div className="max-w-4xl">
+      <Container className="relative w-full px-8 md:px-12 lg:px-16">
+        <div className="max-w-5xl">
             {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 animate-fade-in">
-              <span className="text-sm font-medium">Building Excellence Since 2000</span>
+            <div className="inline-flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm rounded-full mb-8 animate-fade-in">
+              <span className="text-sm font-semibold tracking-wide">Building Excellence Since 2000</span>
             </div>
 
             {/* Heading */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-in-left">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight animate-slide-in-left">
               {currentSlideData.title}
             </h1>
 
             {/* Description */}
             <p
-              className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl animate-slide-in-left"
+              className="text-xl md:text-2xl lg:text-3xl text-white/90 mb-10 max-w-3xl leading-relaxed animate-slide-in-left"
               style={{ animationDelay: '0.1s' }}
             >
               {currentSlideData.subtitle}
@@ -137,24 +187,20 @@ export default function HeroSection() {
 
             {/* CTA Buttons */}
             <div
-              className="flex flex-col sm:flex-row gap-4 animate-slide-in-left"
+              className="flex flex-col sm:flex-row gap-5 mb-16 animate-slide-in-left"
               style={{ animationDelay: '0.2s' }}
             >
               {currentSlideData.buttonText && currentSlideData.buttonLink && (
                 <Link href={currentSlideData.buttonLink}>
-                  <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 shadow-lg">
+                  <button className="px-8 py-4 bg-white text-blue-700 rounded-lg font-bold text-lg shadow-2xl hover:shadow-3xl hover:bg-blue-50 transform hover:scale-105 transition-all duration-300">
                     {currentSlideData.buttonText}
-                  </Button>
+                  </button>
                 </Link>
               )}
               <Link href="/projects">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-white text-white hover:bg-white/10"
-                >
+                <button className="px-8 py-4 bg-transparent border-3 border-white text-white rounded-lg font-bold text-lg backdrop-blur-sm hover:bg-white hover:text-blue-700 transform hover:scale-105 transition-all duration-300 shadow-lg">
                   View Our Projects
-                </Button>
+                </button>
               </Link>
             </div>
 
@@ -215,7 +261,6 @@ export default function HeroSection() {
               </div>
             </div>
           </div>
-        </div>
       </Container>
 
       {/* Slide Controls */}
@@ -242,13 +287,15 @@ export default function HeroSection() {
           </button>
 
           {/* Dots Indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-3 z-10">
             {activeSlides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentSlide ? 'bg-white w-8' : 'bg-white/50'
+                className={`rounded-full transition-all duration-300 border-2 ${
+                  index === currentSlide
+                    ? 'bg-white border-white w-12 h-4'
+                    : 'bg-white/30 border-white/60 w-4 h-4 hover:bg-white/50 hover:border-white'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -256,21 +303,6 @@ export default function HeroSection() {
           </div>
         </>
       )}
-
-      {/* Decorative bottom wave */}
-      <div className="absolute bottom-0 left-0 right-0 z-0">
-        <svg
-          viewBox="0 0 1440 120"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-auto"
-        >
-          <path
-            d="M0 0L60 10C120 20 240 40 360 46.7C480 53 600 47 720 43.3C840 40 960 40 1080 46.7C1200 53 1320 67 1380 73.3L1440 80V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V0Z"
-            fill="white"
-          />
-        </svg>
-      </div>
     </section>
   )
 }

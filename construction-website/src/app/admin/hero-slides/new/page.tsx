@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageUploader from '@/components/admin/ImageUploader'
@@ -19,6 +19,23 @@ export default function NewHeroSlidePage() {
     order: 0,
     active: true,
   })
+
+  // Fetch next order number
+  useEffect(() => {
+    async function fetchNextOrder() {
+      try {
+        const res = await fetch('/api/admin/hero-slides')
+        if (res.ok) {
+          const slides = await res.json()
+          const maxOrder = slides.length > 0 ? Math.max(...slides.map((s: any) => s.order)) : -1
+          setFormData(prev => ({ ...prev, order: maxOrder + 1 }))
+        }
+      } catch (error) {
+        console.error('Error fetching slides:', error)
+      }
+    }
+    fetchNextOrder()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

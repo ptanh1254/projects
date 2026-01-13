@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { z } from 'zod'
-import { deleteFromCloudinary } from '@/lib/cloudinary'
+import { deleteCloudinaryImage } from '@/lib/cloudinary'
 
 const heroSlideSchema = z.object({
   title: z.string().min(1, 'Title is required').optional(),
@@ -18,7 +18,7 @@ const heroSlideSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -26,8 +26,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const slide = await prisma.heroSlide.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!slide) {
@@ -46,7 +47,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -54,12 +55,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const json = await request.json()
     const data = heroSlideSchema.parse(json)
 
     // Get existing slide to check for old image
     const existingSlide = await prisma.heroSlide.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingSlide) {
@@ -68,11 +70,11 @@ export async function PATCH(
 
     // If updating image, delete old one from Cloudinary
     if (data.imagePublicId && existingSlide.imagePublicId && data.imagePublicId !== existingSlide.imagePublicId) {
-      await deleteFromCloudinary(existingSlide.imagePublicId)
+      await deleteCloudinaryImage(existingSlide.imagePublicId)
     }
 
     const slide = await prisma.heroSlide.update({
-      where: { id: params.id },
+      where: { id },
       data,
     })
 
@@ -95,7 +97,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -103,8 +105,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const slide = await prisma.heroSlide.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!slide) {
@@ -113,11 +116,11 @@ export async function DELETE(
 
     // Delete image from Cloudinary if exists
     if (slide.imagePublicId) {
-      await deleteFromCloudinary(slide.imagePublicId)
+      await deleteCloudinaryImage(slide.imagePublicId)
     }
 
     await prisma.heroSlide.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: 'Slide deleted successfully' })

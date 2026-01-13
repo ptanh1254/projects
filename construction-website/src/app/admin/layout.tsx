@@ -1,20 +1,31 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
+'use client'
+
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/admin/Sidebar'
 import TopBar from '@/components/admin/TopBar'
+import { useEffect } from 'react'
 
-export const metadata = {
-  title: 'Admin Panel - Construction Co.',
-  description: 'Admin dashboard for managing construction company website',
-}
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions)
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin-login')
+    }
+  }, [status, router])
 
-  // Redirect to login if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
+  }
+
   if (!session) {
-    redirect('/admin/login')
+    return null
   }
 
   return (

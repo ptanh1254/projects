@@ -35,10 +35,11 @@ export default function ContactsPage() {
       const res = await fetch('/api/admin/contacts')
       if (res.ok) {
         const data = await res.json()
-        setContacts(data)
+        setContacts(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Error fetching contacts:', error)
+      setContacts([])
     } finally {
       setLoading(false)
     }

@@ -4,7 +4,10 @@
       "Bash(npx prisma migrate:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(openssl rand:*)",
+      "Bash(ls:*)",
+      "Bash(powershell -Command \"Get-Process | Where-Object {$_ProcessName -like ''*node*''} | Select-Object Id, ProcessName, Path\")"
     ]
   }
 }

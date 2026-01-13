@@ -7,14 +7,20 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
     ],
   },
-  
-  typescript: {
-    ignoreBuildErrors: true, 
-  },
 
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // Increase body size limit for file uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 };
 
