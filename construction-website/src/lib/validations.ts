@@ -53,17 +53,23 @@ export const serviceSchema = z.object({
 // Settings Schema (Admin)
 export const settingsSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
-  tagline: z.string().optional(),
-  description: z.string().optional(),
+  tagline: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Invalid phone number'),
   address: z.string().min(10, 'Address must be at least 10 characters'),
-  workingHours: z.string().optional(),
-  facebookUrl: z.string().url().optional().or(z.literal('')),
-  instagramUrl: z.string().url().optional().or(z.literal('')),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
-  youtubeUrl: z.string().url().optional().or(z.literal('')),
-  googleMapsUrl: z.string().optional(),
+  workingHours: z.string().nullable().optional(),
+  facebookUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  whatsappUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  linkedinUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  youtubeUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  logoUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  faviconUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  googleMapsUrl: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  googleAnalyticsId: z.string().nullable().optional(),
+  slideInterval: z.number().int().positive().optional(),
 })
 
 // Quote Status Update Schema (Admin)

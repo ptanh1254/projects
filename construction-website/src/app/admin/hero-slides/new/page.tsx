@@ -26,8 +26,8 @@ export default function NewHeroSlidePage() {
       try {
         const res = await fetch('/api/admin/hero-slides')
         if (res.ok) {
-          const slides = await res.json()
-          const maxOrder = slides.length > 0 ? Math.max(...slides.map((s: any) => s.order)) : -1
+          const slides: Array<{ order: number }> = await res.json()
+          const maxOrder = slides.length > 0 ? Math.max(...slides.map((s) => s.order)) : -1
           setFormData(prev => ({ ...prev, order: maxOrder + 1 }))
         }
       } catch (error) {
@@ -56,8 +56,8 @@ export default function NewHeroSlidePage() {
 
       router.push('/admin/hero-slides')
       router.refresh()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

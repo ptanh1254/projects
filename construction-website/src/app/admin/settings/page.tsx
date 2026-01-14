@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ImageUploader from '@/components/admin/ImageUploader'
 
 interface Settings {
   id: string
@@ -12,7 +13,7 @@ interface Settings {
   address: string
   workingHours: string
   facebookUrl: string
-  instagramUrl: string
+  whatsappUrl: string
   linkedinUrl: string
   youtubeUrl: string
   logoUrl: string
@@ -102,7 +103,9 @@ export default function SettingsPage() {
         <p className="text-gray-600 mt-2">Manage website settings and configuration</p>
       </div>
 
-      <form onSubmit={handleSave} className="max-w-4xl space-y-8">
+      <form onSubmit={handleSave}>
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Company Information */}
         <div className="bg-white rounded-lg shadow p-6 space-y-6">
           <h2 className="text-lg font-semibold text-gray-900">Company Information</h2>
@@ -184,112 +187,144 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Social Media */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900">Social Media</h2>
+          {/* Branding */}
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">Branding</h2>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Facebook URL</label>
-            <input
-              type="url"
-              value={settings.facebookUrl || ''}
-              onChange={(e) => updateField('facebookUrl', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <ImageUploader
+              value={settings.logoUrl || ''}
+              onChange={(url) => updateField('logoUrl', url)}
+              onRemove={() => updateField('logoUrl', '')}
+              label="Company Logo"
             />
+
+            <ImageUploader
+              value={settings.faviconUrl || ''}
+              onChange={(url) => updateField('faviconUrl', url)}
+              onRemove={() => updateField('faviconUrl', '')}
+              label="Favicon"
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Google Maps URL</label>
+              <input
+                type="url"
+                value={settings.googleMapsUrl || ''}
+                onChange={(e) => updateField('googleMapsUrl', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://maps.google.com/..."
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Instagram URL</label>
-            <input
-              type="url"
-              value={settings.instagramUrl || ''}
-              onChange={(e) => updateField('instagramUrl', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          {/* Social Media */}
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">Social Media</h2>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Facebook URL</label>
+              <input
+                type="url"
+                value={settings.facebookUrl || ''}
+                onChange={(e) => updateField('facebookUrl', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp URL</label>
+              <input
+                type="url"
+                value={settings.whatsappUrl || ''}
+                onChange={(e) => updateField('whatsappUrl', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="https://wa.me/1234567890"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn URL</label>
+              <input
+                type="url"
+                value={settings.linkedinUrl || ''}
+                onChange={(e) => updateField('linkedinUrl', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
+              <input
+                type="url"
+                value={settings.youtubeUrl || ''}
+                onChange={(e) => updateField('youtubeUrl', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn URL</label>
-            <input
-              type="url"
-              value={settings.linkedinUrl || ''}
-              onChange={(e) => updateField('linkedinUrl', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          {/* SEO Settings */}
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">SEO Settings</h2>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+              <input
+                type="text"
+                value={settings.metaTitle || ''}
+                onChange={(e) => updateField('metaTitle', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+              <textarea
+                value={settings.metaDescription || ''}
+                onChange={(e) => updateField('metaDescription', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Google Analytics ID
+              </label>
+              <input
+                type="text"
+                value={settings.googleAnalyticsId || ''}
+                onChange={(e) => updateField('googleAnalyticsId', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="G-XXXXXXXXXX"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
-            <input
-              type="url"
-              value={settings.youtubeUrl || ''}
-              onChange={(e) => updateField('youtubeUrl', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
+          {/* Hero Slider Settings */}
+          <div className="bg-white rounded-lg shadow p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">Hero Slider Settings</h2>
 
-        {/* SEO Settings */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900">SEO Settings</h2>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
-            <input
-              type="text"
-              value={settings.metaTitle || ''}
-              onChange={(e) => updateField('metaTitle', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
-            <textarea
-              value={settings.metaDescription || ''}
-              onChange={(e) => updateField('metaDescription', e.target.value)}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Google Analytics ID
-            </label>
-            <input
-              type="text"
-              value={settings.googleAnalyticsId || ''}
-              onChange={(e) => updateField('googleAnalyticsId', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="G-XXXXXXXXXX"
-            />
-          </div>
-        </div>
-
-        {/* Hero Slider Settings */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900">Hero Slider Settings</h2>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Slide Interval (seconds)
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="60"
-              value={settings.slideInterval / 1000}
-              onChange={(e) => {
-                const seconds = parseInt(e.target.value) || 5
-                const newSettings = { ...settings, slideInterval: seconds * 1000 }
-                setSettings(newSettings as Settings)
-              }}
-              className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              Time in seconds between automatic slide transitions (1-60 seconds)
-            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Slide Interval (seconds)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={settings.slideInterval / 1000}
+                onChange={(e) => {
+                  const seconds = parseInt(e.target.value) || 5
+                  const newSettings = { ...settings, slideInterval: seconds * 1000 }
+                  setSettings(newSettings as Settings)
+                }}
+                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Time in seconds between automatic slide transitions (1-60 seconds)
+              </p>
+            </div>
           </div>
         </div>
 

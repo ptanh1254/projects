@@ -34,6 +34,11 @@ export async function GET() {
   }
 }
 
+// PATCH update settings (alias for PUT)
+export async function PATCH(request: Request) {
+  return PUT(request)
+}
+
 // PUT update settings
 export async function PUT(request: Request) {
   const auth = await checkAdminAuth()

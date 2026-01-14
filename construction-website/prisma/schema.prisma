@@ -114,7 +114,7 @@ model Settings {
   address           String
   workingHours      String?
   facebookUrl       String?
-  instagramUrl      String?
+  whatsappUrl       String?
   linkedinUrl       String?
   youtubeUrl        String?
   logoUrl           String?
