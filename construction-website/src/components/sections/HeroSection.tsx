@@ -101,28 +101,24 @@ export default function HeroSection() {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-center">
           
-          {/* LEFT CONTENT */}
           <div className="lg:col-span-7 space-y-6 md:space-y-8 pt-12 md:pt-16">
             
-            {/* BADGE - Nhỏ gọn hơn */}
             <div className="inline-flex items-center px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full animate-fade-in">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
               <span className="text-[10px] md:text-xs font-bold tracking-widest text-white uppercase">Building Excellence Since 2000</span>
             </div>
 
-            {/* TYPOGRAPHY - GIẢM MẠNH CỠ CHỮ */}
             <div className="space-y-4">
-              {/* Tiêu đề giảm từ 8xl xuống 6xl/7xl và 4xl trên mobile */}
+
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white tracking-tight leading-[1.1] animate-slide-in-left drop-shadow-xl">
                 {currentSlideData.title}
               </h1>
-              {/* Mô tả giảm xuống text-base/text-lg */}
+
               <p className="text-sm sm:text-base md:text-lg text-blue-50 font-light max-w-2xl leading-relaxed animate-fade-in delay-100 drop-shadow-md">
                 {currentSlideData.subtitle}
               </p>
             </div>
 
-            {/* BUTTONS - Nhỏ gọn hơn */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in delay-200">
               {currentSlideData.buttonText && currentSlideData.buttonLink && (
                 <Link href={currentSlideData.buttonLink} className="w-full sm:w-auto">
@@ -131,14 +127,13 @@ export default function HeroSection() {
                   </button>
                 </Link>
               )}
-              <Link href="/projects" className="w-full sm:w-auto">
+              <Link href="/portfolio" className="w-full sm:w-auto">
                 <button className="w-full px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/30 hover:border-white text-white text-sm md:text-base font-bold tracking-wide rounded-lg transition-all duration-300 backdrop-blur-sm transform hover:-translate-y-0.5">
                   View Our Projects
                 </button>
               </Link>
             </div>
 
-            {/* FEATURES - Nhỏ gọn hơn */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 pt-6 border-t border-white/10 animate-fade-in delay-300 pb-12 md:pb-0">
               
               <div className="group flex items-center space-x-3 bg-black/30 md:bg-black/20 backdrop-blur-md rounded-lg p-3 border border-white/10">

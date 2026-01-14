@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import Toast from '@/components/ui/Toast'
+import { useToast } from '@/hooks/useToast'
 
 interface Service {
   id: string
@@ -21,6 +23,7 @@ export default function ServicesPage() {
     isOpen: false,
     serviceId: null,
   })
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchServices()
@@ -31,10 +34,13 @@ export default function ServicesPage() {
       const res = await fetch('/api/admin/services')
       if (res.ok) {
         const data = await res.json()
-        setServices(Array.isArray(data) ? data : [])
+        setServices(data.services || [])
+      } else {
+        error('Failed to load services')
       }
-    } catch (error) {
-      console.error('Error fetching services:', error)
+    } catch (err) {
+      console.error('Error fetching services:', err)
+      error('Failed to load services')
       setServices([])
     } finally {
       setLoading(false)
@@ -48,10 +54,16 @@ export default function ServicesPage() {
       })
 
       if (res.ok) {
+        success('Service deleted successfully')
         fetchServices()
+        setDeleteModal({ isOpen: false, serviceId: null })
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to delete service')
       }
-    } catch (error) {
-      console.error('Error deleting service:', error)
+    } catch (err) {
+      console.error('Error deleting service:', err)
+      error('Failed to delete service')
     }
   }
 
@@ -64,10 +76,15 @@ export default function ServicesPage() {
       })
 
       if (res.ok) {
+        success(`Service ${!currentActive ? 'activated' : 'deactivated'} successfully`)
         fetchServices()
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to update service')
       }
-    } catch (error) {
-      console.error('Error toggling service:', error)
+    } catch (err) {
+      console.error('Error toggling service:', err)
+      error('Failed to update service')
     }
   }
 
@@ -219,6 +236,11 @@ export default function ServicesPage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

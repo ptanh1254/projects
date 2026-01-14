@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import Toast from '@/components/ui/Toast'
 import { formatDate } from '@/lib/utils'
+import { useToast } from '@/hooks/useToast'
 
 interface Media {
   id: string
@@ -23,6 +25,7 @@ export default function MediaPage() {
     mediaId: null,
   })
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null)
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchMedia()
@@ -34,9 +37,12 @@ export default function MediaPage() {
       if (res.ok) {
         const data = await res.json()
         setMedia(data)
+      } else {
+        error('Failed to load media')
       }
-    } catch (error) {
-      console.error('Error fetching media:', error)
+    } catch (err) {
+      console.error('Error fetching media:', err)
+      error('Failed to load media')
     } finally {
       setLoading(false)
     }
@@ -49,20 +55,30 @@ export default function MediaPage() {
     setUploading(true)
 
     try {
+      let uploadedCount = 0
       for (const file of Array.from(files)) {
         const formData = new FormData()
         formData.append('file', file)
 
-        await fetch('/api/admin/upload', {
+        const res = await fetch('/api/admin/upload', {
           method: 'POST',
           body: formData,
         })
+
+        if (res.ok) {
+          uploadedCount++
+        }
       }
 
-      fetchMedia()
-    } catch (error) {
-      console.error('Error uploading files:', error)
-      alert('Failed to upload files')
+      if (uploadedCount > 0) {
+        success(`${uploadedCount} image${uploadedCount > 1 ? 's' : ''} uploaded successfully`)
+        fetchMedia()
+      } else {
+        error('Failed to upload files')
+      }
+    } catch (err) {
+      console.error('Error uploading files:', err)
+      error('Failed to upload files')
     } finally {
       setUploading(false)
     }
@@ -75,19 +91,25 @@ export default function MediaPage() {
       })
 
       if (res.ok) {
+        success('Media deleted successfully')
         fetchMedia()
+        setDeleteModal({ isOpen: false, mediaId: null })
         if (selectedMedia?.id === id) {
           setSelectedMedia(null)
         }
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to delete media')
       }
-    } catch (error) {
-      console.error('Error deleting media:', error)
+    } catch (err) {
+      console.error('Error deleting media:', err)
+      error('Failed to delete media')
     }
   }
 
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url)
-    alert('URL copied to clipboard!')
+    success('URL copied to clipboard!')
   }
 
   if (loading) {
@@ -267,6 +289,11 @@ export default function MediaPage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

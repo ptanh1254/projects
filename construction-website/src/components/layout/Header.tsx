@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Home', href: '/' },
-  { name: 'Projects', href: '/projects' },
+  { name: 'Portfolio', href: '/portfolio' },
   { name: 'Services', href: '/services' },
   { name: 'About', href: '/about' },
   { name: 'Contact', href: '/contact' },
@@ -60,12 +60,12 @@ export default function Header() {
       className={cn(
         "fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b",
         isHomePage && !isScrolled
-          ? "bg-transparent border-white/10 py-3 md:py-4" // Giảm padding
-          : "bg-white/95 backdrop-blur-md border-gray-200 shadow-sm py-2 md:py-3" // Giảm padding khi scroll
+          ? "bg-transparent border-white/10 py-3 md:py-4" 
+          : "bg-white shadow-md border-gray-200 py-2 md:py-3"
       )}
     >
       <div className="w-full px-4 md:px-8 lg:px-16 xl:px-24 mx-auto relative">
-        <div className="flex items-center justify-between h-12 md:h-14"> {/* Giảm chiều cao thanh header */}
+        <div className="flex items-center justify-between h-12 md:h-14"> 
           
           {/* --- LEFT: LOGO --- */}
           <Link href="/" className="flex items-center gap-3 group z-50 relative">
@@ -93,7 +93,7 @@ export default function Header() {
             )}
             <div className="flex flex-col">
               <span className={cn(
-                "font-bold text-base md:text-lg tracking-wide uppercase transition-colors leading-none", // Giảm cỡ chữ tên công ty
+                "font-bold text-base md:text-lg tracking-wide uppercase transition-colors leading-none",
                 headerTextColor
               )}>
                 {companyName}
@@ -116,7 +116,7 @@ export default function Header() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'relative px-3 py-1.5 text-xs xl:text-sm font-semibold tracking-wide transition-all duration-300 rounded-full', // Giảm cỡ chữ nav xuống text-sm/text-xs
+                    'relative px-3 py-1.5 text-xs xl:text-sm font-semibold tracking-wide transition-all duration-300 rounded-full', 
                     isActive(item.href)
                       ? isHomePage && !isScrolled
                         ? 'text-white bg-white/10 shadow-[0_0_10px_rgba(255,255,255,0.2)]'
@@ -136,7 +136,7 @@ export default function Header() {
                 <a
                   href={`tel:${phone}`}
                   className={cn(
-                    "flex items-center gap-2 font-medium text-xs xl:text-sm transition-colors group whitespace-nowrap", // Giảm cỡ chữ số điện thoại
+                    "flex items-center gap-2 font-medium text-xs xl:text-sm transition-colors group whitespace-nowrap", 
                     headerTextColor
                   )}
                 >
@@ -155,13 +155,13 @@ export default function Header() {
               <Link
                 href="/quote"
                 className={cn(
-                  "px-5 py-2 rounded-full font-bold text-xs tracking-wider transition-all duration-300 transform hover:scale-105 shadow-md whitespace-nowrap", // Nút nhỏ gọn hơn
+                  "px-5 py-2 rounded-full font-bold text-xs tracking-wider transition-all duration-300 transform hover:scale-105 shadow-md whitespace-nowrap", 
                   isHomePage && !isScrolled
                     ? "bg-white text-blue-900 hover:bg-gray-100"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                 )}
               >
-                QUOTE
+                Get a Quote
               </Link>
             </div>
 

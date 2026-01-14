@@ -2,7 +2,7 @@ import { SelectHTMLAttributes, forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface SelectOption {
-  value: string
+  value: string | number
   label: string
 }
 
@@ -19,55 +19,59 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
           <label
             htmlFor={selectId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900"
           >
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        <select
-          ref={ref}
-          id={selectId}
-          className={cn(
-            'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-            'appearance-none bg-white',
-            'bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%236B7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E")]',
-            'bg-[length:1.5em_1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10',
-            error
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
-            className
-          )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={
-            error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined
-          }
-          {...props}
-        >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+            <select
+            ref={ref}
+            id={selectId}
+            className={cn(
+                'flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400',
+                'focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2',
+                'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
+                'appearance-none pr-10', // padding-right for custom arrow
+                error
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-200 focus:border-blue-500',
+                className
+            )}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={
+                error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined
+            }
+            {...props}
+            >
+            {placeholder && (
+                <option value="" disabled>
+                {placeholder}
+                </option>
+            )}
+            {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                {option.label}
+                </option>
+            ))}
+            </select>
+            {/* Custom Arrow Icon aligned perfectly */}
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+        </div>
         {error && (
-          <p id={`${selectId}-error`} className="mt-1 text-sm text-red-600">
+          <p id={`${selectId}-error`} className="text-sm font-medium text-red-500">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${selectId}-helper`} className="mt-1 text-sm text-gray-500">
+          <p id={`${selectId}-helper`} className="text-sm text-gray-500">
             {helperText}
           </p>
         )}

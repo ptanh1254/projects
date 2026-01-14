@@ -6,7 +6,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 // ==================== MODELS ====================
 
 model User {
@@ -18,6 +17,17 @@ model User {
   role      String   @default("admin")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?  @db.Text
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Project {
@@ -73,7 +83,7 @@ model Quote {
   timeline    String?
   message     String?  @db.Text
   fileUrl     String?
-  status      String   @default("new") // new, viewed, processed
+  status      String   @default("new") 
   adminNote   String?  @db.Text
   createdAt   DateTime @default(now())
 }
@@ -85,7 +95,7 @@ model ContactMessage {
   phone     String?
   subject   String?
   message   String   @db.Text
-  status    String   @default("unread") // unread, read
+  status    String   @default("unread") 
   createdAt DateTime @default(now())
 }
 
@@ -123,7 +133,7 @@ model Settings {
   metaTitle         String?
   metaDescription   String?  @db.Text
   googleAnalyticsId String?
-  slideInterval     Int      @default(5000) // milliseconds between slides
+  slideInterval     Int      @default(5000) 
   updatedAt         DateTime @updatedAt
 }
 

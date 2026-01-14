@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface ModalProps {
@@ -22,14 +22,25 @@ export default function Modal({
   size = 'md',
   closeOnOverlay = true,
 }: ModalProps) {
+  
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => { document.body.style.overflow = 'unset' }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const sizes = {
-    sm: 'max-w-md',
+    sm: 'max-w-sm',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
-    full: 'max-w-full mx-4',
+    full: 'max-w-[calc(100vw-2rem)] h-[calc(100vh-2rem)]',
   }
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -46,61 +57,67 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
       onKeyDown={handleEscapeKey}
     >
-      {/* Overlay */}
+      {/* Overlay with blur effect */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
         onClick={handleOverlayClick}
       />
 
       {/* Modal container */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={cn(
-            'relative w-full bg-white rounded-lg shadow-xl transform transition-all',
-            sizes[size]
-          )}
-        >
-          {/* Header */}
-          {(title || description) && (
-            <div className="px-6 py-4 border-b border-gray-200">
-              {title && (
-                <h3 id="modal-title" className="text-lg font-semibold text-gray-900">
-                  {title}
-                </h3>
-              )}
-              {description && (
-                <p className="mt-1 text-sm text-gray-500">{description}</p>
-              )}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Close modal"
+      <div
+        className={cn(
+          'relative w-full bg-white rounded-lg shadow-2xl animate-in zoom-in-95 duration-200 p-0',
+          'border border-gray-200',
+          sizes[size],
+          size === 'full' ? 'flex flex-col' : 'mx-4'
+        )}
+      >
+        {/* Header */}
+        {(title || description) && (
+          <div className="flex flex-col space-y-1.5 p-6 pb-4">
+            {title && (
+              <h3 id="modal-title" className="text-lg font-semibold leading-none tracking-tight">
+                {title}
+              </h3>
+            )}
+            {description && (
+              <p className="text-sm text-gray-500">{description}</p>
+            )}
+            
+            {/* Standardized Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-100 data-[state=open]:text-gray-500"
+              aria-label="Close modal"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
-          {/* Content */}
-          <div className="px-6 py-4">{children}</div>
+        {/* Content */}
+        <div className={cn("p-6 pt-0", size === 'full' && 'flex-1 overflow-auto')}>
+            {children}
         </div>
       </div>
     </div>
@@ -110,7 +127,7 @@ export default function Modal({
 // Modal footer component for action buttons
 export function ModalFooter({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50', className)}>
+    <div className={cn('flex items-center justify-end gap-2 p-6 pt-0', className)}>
       {children}
     </div>
   )

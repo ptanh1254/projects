@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import Toast from '@/components/ui/Toast'
 import { formatDate } from '@/lib/utils'
+import { useToast } from '@/hooks/useToast'
 
 interface Contact {
   id: string
@@ -25,6 +27,7 @@ export default function ContactsPage() {
     contactId: null,
   })
   const [filter, setFilter] = useState('all')
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchContacts()
@@ -35,10 +38,13 @@ export default function ContactsPage() {
       const res = await fetch('/api/admin/contacts')
       if (res.ok) {
         const data = await res.json()
-        setContacts(Array.isArray(data) ? data : [])
+        setContacts(data.contacts || [])
+      } else {
+        error('Failed to load contacts')
       }
-    } catch (error) {
-      console.error('Error fetching contacts:', error)
+    } catch (err) {
+      console.error('Error fetching contacts:', err)
+      error('Failed to load contacts')
       setContacts([])
     } finally {
       setLoading(false)
@@ -52,17 +58,23 @@ export default function ContactsPage() {
       })
 
       if (res.ok) {
+        success('Contact message deleted successfully')
         fetchContacts()
+        setDeleteModal({ isOpen: false, contactId: null })
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to delete contact message')
       }
-    } catch (error) {
-      console.error('Error deleting contact:', error)
+    } catch (err) {
+      console.error('Error deleting contact:', err)
+      error('Failed to delete contact message')
     }
   }
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       const res = await fetch(`/api/admin/contacts/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
@@ -72,9 +84,13 @@ export default function ContactsPage() {
         if (selectedContact?.id === id) {
           setSelectedContact({ ...selectedContact, status })
         }
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to update contact status')
       }
-    } catch (error) {
-      console.error('Error updating contact:', error)
+    } catch (err) {
+      console.error('Error updating contact:', err)
+      error('Failed to update contact status')
     }
   }
 
@@ -312,6 +328,11 @@ export default function ContactsPage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

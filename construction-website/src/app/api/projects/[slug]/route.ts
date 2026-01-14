@@ -3,13 +3,13 @@ import prisma from '@/lib/db'
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params
     const project = await prisma.project.findUnique({
-      where: { 
-        slug: params.slug,
-        status: 'published',
+      where: {
+        slug: slug,
       },
       include: {
         images: {
@@ -18,7 +18,7 @@ export async function GET(
       },
     })
 
-    if (!project) {
+    if (!project || project.status !== 'published') {
       return NextResponse.json(
         { error: 'Project not found' },
         { status: 404 }

@@ -12,11 +12,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const textareaId = id || label?.toLowerCase().replace(/\s+/g, '-')
 
     return (
-      <div className="w-full">
+      <div className="w-full space-y-2">
         {label && (
           <label
             htmlFor={textareaId}
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900"
           >
             {label}
             {props.required && <span className="text-red-500 ml-1">*</span>}
@@ -26,13 +26,12 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            'block w-full px-3 py-2 border rounded-md shadow-sm transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-            'resize-y min-h-[100px]',
+            'flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50',
             error
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+              ? 'border-red-500 focus-visible:ring-red-500'
+              : 'border-gray-200 focus:border-blue-500',
             className
           )}
           aria-invalid={error ? 'true' : 'false'}
@@ -42,12 +41,12 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p id={`${textareaId}-error`} className="mt-1 text-sm text-red-600">
+          <p id={`${textareaId}-error`} className="text-sm font-medium text-red-500">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${textareaId}-helper`} className="mt-1 text-sm text-gray-500">
+          <p id={`${textareaId}-helper`} className="text-sm text-gray-500">
             {helperText}
           </p>
         )}

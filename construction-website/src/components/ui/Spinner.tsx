@@ -9,8 +9,8 @@ export interface SpinnerProps extends HTMLAttributes<HTMLDivElement> {
 export default function Spinner({ size = 'md', color = 'primary', className, ...props }: SpinnerProps) {
   const sizes = {
     sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
+    md: 'w-6 h-6', // Adjusted for better proportion
+    lg: 'w-10 h-10',
     xl: 'w-16 h-16',
   }
 
@@ -50,10 +50,10 @@ export default function Spinner({ size = 'md', color = 'primary', className, ...
 // Fullscreen spinner overlay
 export function SpinnerOverlay({ message }: { message?: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="text-center">
-        <Spinner size="xl" color="white" />
-        {message && <p className="mt-4 text-white text-lg">{message}</p>}
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center space-y-4">
+        <Spinner size="lg" color="primary" />
+        {message && <p className="text-sm font-medium text-gray-700 animate-pulse">{message}</p>}
       </div>
     </div>
   )

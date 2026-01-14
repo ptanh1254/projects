@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import Toast from '@/components/ui/Toast'
 import { formatDate } from '@/lib/utils'
+import { useToast } from '@/hooks/useToast'
 
 interface Quote {
   id: string
@@ -29,6 +31,7 @@ export default function QuotesPage() {
     quoteId: null,
   })
   const [filter, setFilter] = useState('all')
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchQuotes()
@@ -39,10 +42,13 @@ export default function QuotesPage() {
       const res = await fetch('/api/admin/quotes')
       if (res.ok) {
         const data = await res.json()
-        setQuotes(Array.isArray(data) ? data : [])
+        setQuotes(data.quotes || [])
+      } else {
+        error('Failed to load quotes')
       }
-    } catch (error) {
-      console.error('Error fetching quotes:', error)
+    } catch (err) {
+      console.error('Error fetching quotes:', err)
+      error('Failed to load quotes')
       setQuotes([])
     } finally {
       setLoading(false)
@@ -56,26 +62,37 @@ export default function QuotesPage() {
       })
 
       if (res.ok) {
+        success('Quote deleted successfully')
         fetchQuotes()
+        setDeleteModal({ isOpen: false, quoteId: null })
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to delete quote')
       }
-    } catch (error) {
-      console.error('Error deleting quote:', error)
+    } catch (err) {
+      console.error('Error deleting quote:', err)
+      error('Failed to delete quote')
     }
   }
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       const res = await fetch(`/api/admin/quotes/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
 
       if (res.ok) {
+        success('Quote status updated successfully')
         fetchQuotes()
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to update quote status')
       }
-    } catch (error) {
-      console.error('Error updating quote:', error)
+    } catch (err) {
+      console.error('Error updating quote:', err)
+      error('Failed to update quote status')
     }
   }
 
@@ -230,6 +247,11 @@ export default function QuotesPage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import ImageUploader from '@/components/admin/ImageUploader'
+import Toast from '@/components/ui/Toast'
+import { useToast } from '@/hooks/useToast'
 
 interface Settings {
   id: string
@@ -29,6 +31,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState<Settings | null>(null)
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchSettings()
@@ -40,9 +43,12 @@ export default function SettingsPage() {
       if (res.ok) {
         const data = await res.json()
         setSettings(data)
+      } else {
+        error('Failed to load settings')
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error)
+    } catch (err) {
+      console.error('Error fetching settings:', err)
+      error('Failed to load settings')
     } finally {
       setLoading(false)
     }
@@ -61,13 +67,14 @@ export default function SettingsPage() {
       })
 
       if (res.ok) {
-        alert('Settings saved successfully!')
+        success('Settings saved successfully!')
       } else {
-        alert('Failed to save settings')
+        const data = await res.json()
+        error(data.error || 'Failed to save settings')
       }
-    } catch (error) {
-      console.error('Error saving settings:', error)
-      alert('Failed to save settings')
+    } catch (err) {
+      console.error('Error saving settings:', err)
+      error('Failed to save settings')
     } finally {
       setSaving(false)
     }
@@ -339,6 +346,11 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

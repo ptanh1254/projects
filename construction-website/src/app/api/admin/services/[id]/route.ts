@@ -109,6 +109,44 @@ export async function PUT(
   }
 }
 
+// PATCH partial update (for toggling active status)
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const auth = await checkAdminAuth()
+  if (!auth.authorized) return auth.response
+
+  try {
+    const body = await request.json()
+
+    const service = await prisma.service.update({
+      where: { id: params.id },
+      data: body,
+    })
+
+    return NextResponse.json({
+      success: true,
+      service,
+      message: 'Service updated successfully',
+    })
+  } catch (error: any) {
+    console.error('Error updating service:', error)
+
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Service not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to update service' },
+      { status: 500 }
+    )
+  }
+}
+
 // DELETE service
 export async function DELETE(
   request: Request,

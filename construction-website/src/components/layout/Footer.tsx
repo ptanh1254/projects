@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
+import Container from '@/components/layout/Container'
 
 interface Settings {
   companyName: string
@@ -112,13 +114,9 @@ export default function Footer() {
     })
   }
 
-  const socialLinks = socialLinksArray
-
   return (
     <footer className="bg-gray-900 text-white border-t border-gray-800">
-      
-      {/* Container Full Width */}
-      <div className="w-full max-w-[1920px] mx-auto px-6 md:px-12 lg:px-24">
+      <Container>
         <div className="py-12 md:py-16">
           
           {/* Top section */}
@@ -156,15 +154,19 @@ export default function Footer() {
               </p>
 
               {/* Social Links */}
-              {socialLinks.length > 0 && (
+              {socialLinksArray.length > 0 && (
                 <div className="flex space-x-3 pt-2">
-                  {socialLinks.map((item) => (
+                  {socialLinksArray.map((item) => (
                     <a
                       key={item.name}
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-blue-600 text-gray-300 hover:text-white transition-all duration-300 border border-white/10 hover:border-blue-500"
+                      className={cn(
+                        "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 border",
+                        "bg-white/5 text-gray-300 border-white/10",
+                        "hover:bg-blue-600 hover:text-white hover:border-blue-500"
+                      )}
                       aria-label={item.name}
                     >
                       {item.icon}
@@ -275,7 +277,7 @@ export default function Footer() {
             </div>
           </div>
         </div>
-      </div>
+      </Container>
     </footer>
   )
 }

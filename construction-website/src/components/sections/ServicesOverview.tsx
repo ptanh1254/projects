@@ -1,6 +1,5 @@
 'use client'
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, JSX } from 'react'
 import Link from 'next/link'
 import Container from '@/components/layout/Container'
 import { Card, CardContent } from '@/components/ui/Card'

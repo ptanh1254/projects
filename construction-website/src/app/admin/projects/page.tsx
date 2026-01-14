@@ -5,7 +5,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
+import Toast from '@/components/ui/Toast'
 import { formatDate } from '@/lib/utils'
+import { useToast } from '@/hooks/useToast'
 
 interface Project {
   id: string
@@ -27,6 +29,7 @@ export default function ProjectsPage() {
     projectId: null,
   })
   const [filter, setFilter] = useState('all')
+  const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
     fetchProjects()
@@ -38,9 +41,12 @@ export default function ProjectsPage() {
       if (res.ok) {
         const data = await res.json()
         setProjects(data.projects || [])
+      } else {
+        error('Failed to load projects')
       }
-    } catch (error) {
-      console.error('Error fetching projects:', error)
+    } catch (err) {
+      console.error('Error fetching projects:', err)
+      error('Failed to load projects')
       setProjects([])
     } finally {
       setLoading(false)
@@ -54,10 +60,16 @@ export default function ProjectsPage() {
       })
 
       if (res.ok) {
+        success('Project deleted successfully')
         fetchProjects()
+        setDeleteModal({ isOpen: false, projectId: null })
+      } else {
+        const data = await res.json()
+        error(data.error || 'Failed to delete project')
       }
-    } catch (error) {
-      console.error('Error deleting project:', error)
+    } catch (err) {
+      console.error('Error deleting project:', err)
+      error('Failed to delete project')
     }
   }
 
@@ -261,6 +273,11 @@ export default function ProjectsPage() {
         confirmText="Delete"
         variant="danger"
       />
+
+      {/* Toast Notification */}
+      {toast.isVisible && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </div>
   )
 }

@@ -9,7 +9,11 @@
       "Bash(ls:*)",
       "Bash(powershell -Command \"Get-Process | Where-Object {$_ProcessName -like ''*node*''} | Select-Object Id, ProcessName, Path\")",
       "Bash(npx prisma:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run seed:*)",
+      "Bash(npx tsx:*)",
+      "Bash(timeout:*)",
+      "Bash(set PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes không cần seed tôi sẽ tự thêm)"
     ]
   }
 }
