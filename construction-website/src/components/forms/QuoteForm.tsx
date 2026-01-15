@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { quoteSchema, type QuoteFormData } from '@/lib/validations'
+// Đảm bảo bạn đã có các component này trong project, nếu chưa hãy tạo hoặc thay bằng thẻ HTML thường
 import Input from '@/components/ui/Input'
 import Textarea from '@/components/ui/Textarea'
 import Select from '@/components/ui/Select'
@@ -30,10 +31,20 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
     formState: { errors },
     reset,
     trigger,
-    watch,
   } = useForm<QuoteFormData>({
     resolver: zodResolver(quoteSchema),
     mode: 'onChange',
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      projectType: '',
+      location: '',
+      area: undefined,
+      budget: '',
+      timeline: '',
+      message: '',
+    }
   })
 
   const nextStep = async () => {
@@ -42,7 +53,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
     if (currentStep === 1) {
       fieldsToValidate = ['name', 'email', 'phone']
     } else if (currentStep === 2) {
-      fieldsToValidate = ['projectType', 'location']
+      fieldsToValidate = ['projectType', 'location', 'area']
     }
 
     const isValid = await trigger(fieldsToValidate)
@@ -61,7 +72,8 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
     setSubmitStatus(null)
 
     try {
-      const response = await fetch('/api/quote', {
+      // Gọi API route được định nghĩa trong quote/route.ts
+      const response = await fetch('/quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,8 +88,11 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
           type: 'success',
           message: result.message || 'Thank you! Your quote request has been submitted successfully.',
         })
+        // Reset form và quay về bước 1 sau khi gửi thành công
         reset()
         setCurrentStep(1)
+        // Cuộn màn hình lên đầu form để user thấy thông báo
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } else {
         setSubmitStatus({
           type: 'error',
@@ -85,6 +100,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
         })
       }
     } catch (error) {
+      console.error('Submit error:', error)
       setSubmitStatus({
         type: 'error',
         message: 'Failed to submit quote request. Please try again later.',
@@ -100,9 +116,9 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           {[1, 2, 3].map((step) => (
-            <div key={step} className="flex items-center flex-1">
+            <div key={step} className="flex items-center flex-1 last:flex-none">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors duration-200 ${
                   currentStep >= step
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-600'
@@ -112,7 +128,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </div>
               {step < totalSteps && (
                 <div
-                  className={`flex-1 h-1 mx-2 ${
+                  className={`flex-1 h-1 mx-2 transition-colors duration-200 ${
                     currentStep > step ? 'bg-blue-600' : 'bg-gray-200'
                   }`}
                 />
@@ -120,17 +136,17 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
             </div>
           ))}
         </div>
-        <div className="flex justify-between text-xs text-gray-600 mt-2">
+        <div className="flex justify-between text-xs text-gray-600 mt-2 font-medium">
           <span>Contact Info</span>
-          <span>Project Details</span>
-          <span>Additional Info</span>
+          <span className="text-center pl-4">Project Details</span>
+          <span className="text-right">Additional Info</span>
         </div>
       </div>
 
       {/* Status Message */}
       {submitStatus && (
         <div
-          className={`p-4 rounded-lg mb-6 ${
+          className={`p-4 rounded-lg mb-6 animate-in fade-in slide-in-from-top-2 ${
             submitStatus.type === 'success'
               ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
@@ -154,7 +170,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
                 />
               </svg>
             )}
-            <span>{submitStatus.message}</span>
+            <span className="font-medium">{submitStatus.message}</span>
           </div>
         </div>
       )}
@@ -162,7 +178,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Step 1: Contact Information */}
         {currentStep === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-xl font-bold text-gray-900">Contact Information</h3>
 
             <div>
@@ -171,7 +187,6 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </label>
               <Input
                 id="name"
-                type="text"
                 placeholder="John Doe"
                 error={errors.name?.message}
                 {...register('name')}
@@ -208,7 +223,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
 
         {/* Step 2: Project Details */}
         {currentStep === 2 && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-xl font-bold text-gray-900">Project Details</h3>
 
             <div>
@@ -221,10 +236,11 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
                 {...register('projectType')}
               >
                 <option value="">Select project type</option>
-                <option value="residential">Residential</option>
-                <option value="commercial">Commercial</option>
-                <option value="industrial">Industrial</option>
-                <option value="renovation">Renovation</option>
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Industrial">Industrial</option>
+                <option value="Renovation">Renovation</option>
+                <option value="Other">Other</option>
               </Select>
             </div>
 
@@ -234,7 +250,6 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </label>
               <Input
                 id="location"
-                type="text"
                 placeholder="City, State/Province"
                 error={errors.location?.message}
                 {...register('location')}
@@ -251,7 +266,10 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
                 step="0.01"
                 placeholder="e.g., 150"
                 error={errors.area?.message}
-                {...register('area', { valueAsNumber: true })}
+                {...register('area', { 
+                  // Xử lý chuyển đổi chuỗi rỗng thành undefined để qua được validate optional() của Zod
+                  setValueAs: (v) => v === "" ? undefined : parseFloat(v) 
+                })}
               />
             </div>
           </div>
@@ -259,7 +277,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
 
         {/* Step 3: Additional Information */}
         {currentStep === 3 && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-xl font-bold text-gray-900">Additional Information</h3>
 
             <div>
@@ -268,11 +286,11 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </label>
               <Select id="budget" {...register('budget')}>
                 <option value="">Select budget range</option>
-                <option value="under-50k">Under $50,000</option>
-                <option value="50k-100k">$50,000 - $100,000</option>
-                <option value="100k-250k">$100,000 - $250,000</option>
-                <option value="250k-500k">$250,000 - $500,000</option>
-                <option value="over-500k">Over $500,000</option>
+                <option value="Under $50,000">Under $50,000</option>
+                <option value="$50,000 - $100,000">$50,000 - $100,000</option>
+                <option value="$100,000 - $250,000">$100,000 - $250,000</option>
+                <option value="$250,000 - $500,000">$250,000 - $500,000</option>
+                <option value="Over $500,000">Over $500,000</option>
               </Select>
             </div>
 
@@ -282,11 +300,11 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </label>
               <Select id="timeline" {...register('timeline')}>
                 <option value="">Select timeline</option>
-                <option value="asap">As soon as possible</option>
-                <option value="1-3-months">1-3 months</option>
-                <option value="3-6-months">3-6 months</option>
-                <option value="6-12-months">6-12 months</option>
-                <option value="flexible">Flexible</option>
+                <option value="As soon as possible">As soon as possible</option>
+                <option value="1-3 months">1-3 months</option>
+                <option value="3-6 months">3-6 months</option>
+                <option value="6-12 months">6-12 months</option>
+                <option value="Flexible">Flexible</option>
               </Select>
             </div>
 
@@ -296,7 +314,7 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
               </label>
               <Textarea
                 id="message"
-                placeholder="Tell us more about your project..."
+                placeholder="Tell us more about your project (style, number of rooms, special requirements...)"
                 rows={6}
                 error={errors.message?.message}
                 {...register('message')}
@@ -306,26 +324,35 @@ export default function QuoteForm({ className = '' }: QuoteFormProps) {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between pt-4">
-          {currentStep > 1 && (
-            <Button type="button" variant="secondary" onClick={prevStep}>
+        <div className="flex justify-between pt-6 border-t border-gray-100 mt-6">
+          {currentStep > 1 ? (
+            <Button 
+              type="button" 
+              variant="secondary" // Giả sử Button component hỗ trợ variant
+              onClick={prevStep}
+              className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
               Previous
             </Button>
-          )}
+          ) : <div></div>}
 
           {currentStep < totalSteps ? (
-            <Button type="button" onClick={nextStep} className="ml-auto">
-              Next
+            <Button type="button" onClick={nextStep} className="ml-auto bg-blue-600 hover:bg-blue-700 text-white">
+              Next Step
             </Button>
           ) : (
-            <Button type="submit" disabled={isSubmitting} className="ml-auto">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="ml-auto bg-blue-600 hover:bg-blue-700 text-white min-w-[160px]"
+            >
               {isSubmitting ? (
                 <>
                   <Spinner size="sm" className="mr-2" />
-                  Submitting...
+                  Sending...
                 </>
               ) : (
-                'Submit Quote Request'
+                'Submit Request'
               )}
             </Button>
           )}
