@@ -13,7 +13,8 @@
       "Bash(npm run seed:*)",
       "Bash(npx tsx:*)",
       "Bash(timeout:*)",
-      "Bash(set PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes không cần seed tôi sẽ tự thêm)"
+      "Bash(set PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes không cần seed tôi sẽ tự thêm)",
+      "Bash(npx ts-node:*)"
     ]
   }
 }

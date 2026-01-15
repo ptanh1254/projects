@@ -65,26 +65,26 @@ const features = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="section-padding">
+    <section className="section-padding bg-white">
       <Container>
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left side - Content */}
           <div>
-            <h2 className="section-title mb-6">Why Choose Us</h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <h2 className="section-title text-3xl md:text-4xl font-bold text-slate-900 mb-6">Why Choose Us</h2>
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
               With decades of experience and hundreds of successful projects, we have built
               a reputation for excellence in the construction industry. Here is what sets us apart.
             </p>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {features.map((feature) => (
-                <div key={feature.id} className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                <div key={feature.id} className="flex items-start space-x-5 group">
+                  <div className="flex-shrink-0 w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
                     {feature.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-1">{feature.title}</h3>
-                    <p className="text-gray-600">{feature.description}</p>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">{feature.title}</h3>
+                    <p className="text-slate-500 leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               ))}
@@ -92,19 +92,24 @@ export default function WhyChooseUs() {
           </div>
 
           {/* Right side - Image/Visual */}
-          <div className="relative">
-            <div className="aspect-4-3 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200">
-              {/* Placeholder for image */}
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
+          <div className="relative lg:h-full min-h-[500px]">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white rounded-3xl border border-slate-100 shadow-inner">
+               {/* Visual Placeholder for the concept */}
+               <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                  <div className="w-full h-full bg-slate-50 rounded-3xl overflow-hidden relative shadow-lg">
+                      {/* You can replace this svg with a real <Image /> later */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                        <svg className="w-32 h-32 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                  </div>
+               </div>
             </div>
 
             {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-600 rounded-lg opacity-10 -z-10" />
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-blue-600 rounded-lg opacity-10 -z-10" />
+            <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-100/50 rounded-full blur-2xl -z-10 animate-pulse" />
+            <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-indigo-100/50 rounded-full blur-2xl -z-10" />
           </div>
         </div>
       </Container>

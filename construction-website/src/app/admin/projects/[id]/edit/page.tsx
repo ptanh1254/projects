@@ -6,16 +6,23 @@ import ImageUploader from '@/components/admin/ImageUploader'
 import Toast from '@/components/ui/Toast'
 import { useToast } from '@/hooks/useToast'
 
+// Interface cho Category
+interface Category {
+  id: string
+  name: string
+}
+
+// Interface cho Project
 interface Project {
   id: string
   title: string
   description: string
-  category: 'residential' | 'commercial' | 'industrial' | 'renovation'
+  category: string // Lưu Category ID
   location: string
   area: number | null
   duration: string | null
   client: string | null
-  status: 'draft' | 'published'
+  status: 'draft' | 'published' | 'archived' // Đã thêm archived
   featured: boolean
   images: { id: string; url: string; order: number }[]
 }
@@ -25,35 +32,56 @@ export default function EditProjectPage() {
   const params = useParams()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  
   const [project, setProject] = useState<Project | null>(null)
   const [images, setImages] = useState<{ id?: string; url: string; order: number }[]>([])
+  const [categories, setCategories] = useState<Category[]>([]) // State lưu danh mục
+  
   const { toast, hideToast, success, error } = useToast()
 
+  // Fetch dữ liệu khi load trang
   useEffect(() => {
-    fetchProject()
-  }, [params.id])
+    const fetchData = async () => {
+      try {
+        // 1. Fetch Categories trước
+        const catRes = await fetch('/api/admin/categories')
+        if (catRes.ok) {
+          const catData = await catRes.json()
+          setCategories(catData.categories || [])
+        }
 
-  const fetchProject = async () => {
-    try {
-      const res = await fetch(`/api/admin/projects/${params.id}`)
-      if (res.ok) {
-        const data = await res.json()
-        setProject(data)
-        setImages(data.images || [])
-      } else {
-        error('Failed to load project')
+        // 2. Fetch Project sau
+        if (params.id) {
+          const projectRes = await fetch(`/api/admin/projects/${params.id}`)
+          if (projectRes.ok) {
+            const projectData = await projectRes.json()
+            setProject(projectData)
+            setImages(projectData.images || [])
+          } else {
+            // Nếu API trả về 404
+            console.error('Project not found')
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        error('Failed to load data')
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error('Error fetching project:', err)
-      error('Failed to load project')
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchData()
+  }, [params.id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!project) return
+
+    // Validate category
+    if (!project.category) {
+      error('Please select a category')
+      return
+    }
 
     setSaving(true)
 
@@ -63,8 +91,9 @@ export default function EditProjectPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...project,
+          area: project.area ? Number(project.area) : null, // Đảm bảo area là số
           images: images.map((img, index) => ({
-            id: img.id,
+            id: img.id, // Giữ lại ID nếu là ảnh cũ
             url: img.url,
             order: index,
           })),
@@ -87,14 +116,17 @@ export default function EditProjectPage() {
     }
   }
 
+  // Xử lý thêm ảnh mới
   const handleAddImage = (url: string) => {
     setImages([...images, { url, order: images.length }])
   }
 
+  // Xử lý xóa ảnh
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index))
   }
 
+  // Xử lý sắp xếp ảnh
   const moveImage = (index: number, direction: 'up' | 'down') => {
     const newImages = [...images]
     const newIndex = direction === 'up' ? index - 1 : index + 1
@@ -107,7 +139,7 @@ export default function EditProjectPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
+        <div className="text-gray-500">Loading project data...</div>
       </div>
     )
   }
@@ -115,7 +147,13 @@ export default function EditProjectPage() {
   if (!project) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">Project not found</p>
+        <p className="text-gray-500 text-lg">Project not found</p>
+        <button 
+          onClick={() => router.push('/admin/projects')}
+          className="mt-4 text-blue-600 hover:underline"
+        >
+          Back to Projects
+        </button>
       </div>
     )
   }
@@ -169,16 +207,23 @@ export default function EditProjectPage() {
                 onChange={(e) =>
                   setProject({
                     ...project,
-                    category: e.target.value as typeof project.category,
+                    category: e.target.value,
                   })
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="residential">Residential</option>
-                <option value="commercial">Commercial</option>
-                <option value="industrial">Industrial</option>
-                <option value="renovation">Renovation</option>
+                <option value="" disabled>Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
+              {categories.length === 0 && (
+                <p className="text-xs text-red-500 mt-1">
+                  No categories found.
+                </p>
+              )}
             </div>
 
             <div>
@@ -307,6 +352,7 @@ export default function EditProjectPage() {
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
 

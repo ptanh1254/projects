@@ -4,8 +4,10 @@ import { Card, CardContent } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 
 interface ProjectImage {
+  id: string
   url: string
   publicId: string
+  order: number
 }
 
 interface ProjectCardProps {
@@ -13,30 +15,18 @@ interface ProjectCardProps {
   title: string
   slug: string
   category: string
+  categoryName?: string
   location: string
   area?: number | null
   duration?: string | null
   images: ProjectImage[]
 }
 
-const categoryLabels: Record<string, string> = {
-  residential: 'Residential',
-  commercial: 'Commercial',
-  industrial: 'Industrial',
-  renovation: 'Renovation',
-}
-
-const categoryColors: Record<string, 'info' | 'success' | 'warning' | 'secondary'> = {
-  residential: 'info',
-  commercial: 'success',
-  industrial: 'warning',
-  renovation: 'secondary',
-}
-
 export default function ProjectCard({
   title,
   slug,
   category,
+  categoryName,
   location,
   area,
   duration,
@@ -75,10 +65,10 @@ export default function ProjectCard({
 
           {/* Category Badge */}
           <Badge
-            variant={categoryColors[category] || 'info'}
+            variant="info"
             className="absolute top-4 left-4 z-10"
           >
-            {categoryLabels[category] || category}
+            {categoryName || category}
           </Badge>
         </div>
 

@@ -15,6 +15,7 @@ export async function GET(
         images: {
           orderBy: { order: 'asc' },
         },
+        categoryData: true, // <--- THÊM DÒNG NÀY
       },
     })
 
@@ -28,12 +29,13 @@ export async function GET(
     // Get related projects
     const relatedProjects = await prisma.project.findMany({
       where: {
-        category: project.category,
+        category: project.category, 
         status: 'published',
         id: { not: project.id },
       },
       include: {
         images: { take: 1 },
+        categoryData: true, 
       },
       take: 4,
     })

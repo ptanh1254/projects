@@ -6,6 +6,31 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  admin
+  user
+  editor
+}
+
+enum ProjectStatus {
+  draft
+  published
+  archived
+}
+
+enum QuoteStatus {
+  new
+  contacted
+  closed
+}
+
+enum ContactStatus {
+  unread
+  read
+  replied
+}
+
 // ==================== MODELS ====================
 
 model User {
@@ -14,7 +39,7 @@ model User {
   password  String
   name      String
   avatar    String?
-  role      String   @default("admin")
+  role      Role     @default(admin) 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -28,6 +53,8 @@ model Category {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  projects    Project[]
 }
 
 model Project {
@@ -35,16 +62,21 @@ model Project {
   title       String
   slug        String   @unique
   description String   @db.Text
-  category    String   // residential, commercial, industrial, renovation
+  category    String   
+  categoryData Category @relation(fields: [category], references: [id]) 
+  // ------------------------
+
   location    String
   area        Float?
   duration    String?
   client      String?
+  
   images      Image[]
-  featured    Boolean  @default(false)
-  status      String   @default("draft") // draft, published
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  featured    Boolean       @default(false)
+  status      ProjectStatus @default(draft) 
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Image {
@@ -53,6 +85,7 @@ model Image {
   publicId  String
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
   order     Int      @default(0)
   createdAt DateTime @default(now())
 }
@@ -72,31 +105,35 @@ model Service {
 }
 
 model Quote {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   email       String
   phone       String
   projectType String
   location    String
   area        Float?
-  budget      String?
+  budget      String?     
   timeline    String?
-  message     String?  @db.Text
+  message     String?     @db.Text
   fileUrl     String?
-  status      String   @default("new") 
-  adminNote   String?  @db.Text
-  createdAt   DateTime @default(now())
+  
+  status      QuoteStatus @default(new) 
+  
+  adminNote   String?     @db.Text
+  createdAt   DateTime    @default(now())
 }
 
 model ContactMessage {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
   email     String
   phone     String?
   subject   String?
-  message   String   @db.Text
-  status    String   @default("unread") 
-  createdAt DateTime @default(now())
+  message   String        @db.Text
+  
+  status    ContactStatus @default(unread) 
+  
+  createdAt DateTime      @default(now())
 }
 
 model Testimonial {
@@ -138,15 +175,15 @@ model Settings {
 }
 
 model HeroSlide {
-  id          String   @id @default(cuid())
-  title       String
-  subtitle    String   @db.Text
-  buttonText  String?
-  buttonLink  String?
-  imageUrl    String?
+  id            String   @id @default(cuid())
+  title         String
+  subtitle      String   @db.Text
+  buttonText    String?
+  buttonLink    String?
+  imageUrl      String?
   imagePublicId String?
-  order       Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order         Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

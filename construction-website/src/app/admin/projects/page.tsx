@@ -21,8 +21,15 @@ interface Project {
   createdAt: string
 }
 
+interface Category {
+  id: string
+  name: string
+  slug: string
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; projectId: string | null }>({
     isOpen: false,
@@ -32,25 +39,39 @@ export default function ProjectsPage() {
   const { toast, hideToast, success, error } = useToast()
 
   useEffect(() => {
-    fetchProjects()
+    fetchData()
   }, [])
 
-  const fetchProjects = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch('/api/admin/projects')
-      if (res.ok) {
-        const data = await res.json()
+      const [projectsRes, categoriesRes] = await Promise.all([
+        fetch('/api/admin/projects'),
+        fetch('/api/admin/categories'),
+      ])
+
+      if (projectsRes.ok) {
+        const data = await projectsRes.json()
         setProjects(data.projects || [])
       } else {
         error('Failed to load projects')
       }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json()
+        setCategories(data.categories || [])
+      }
     } catch (err) {
-      console.error('Error fetching projects:', err)
+      console.error('Error fetching data:', err)
       error('Failed to load projects')
       setProjects([])
     } finally {
       setLoading(false)
     }
+  }
+
+  const getCategoryName = (categorySlug: string) => {
+    const cat = categories.find((c) => c.slug === categorySlug)
+    return cat?.name || categorySlug
   }
 
   const handleDelete = async (id: string) => {

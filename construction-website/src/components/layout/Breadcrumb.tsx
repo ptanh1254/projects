@@ -14,20 +14,27 @@ export interface BreadcrumbProps {
 export default function Breadcrumb({ items, className }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn('flex', className)}>
-      <ol className="flex items-center space-x-2 text-sm">
+      <ol className="flex flex-wrap items-center gap-1.5 text-sm sm:gap-2.5">
         {/* Home link */}
         <li>
           <Link
             href="/"
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
           >
+            {/* Icon Home: Tinh chỉnh lại SVG cho nét mảnh và hiện đại hơn */}
             <svg
-              className="w-4 h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
               aria-hidden="true"
             >
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+              />
             </svg>
             <span className="sr-only">Home</span>
           </Link>
@@ -38,40 +45,42 @@ export default function Breadcrumb({ items, className }: BreadcrumbProps) {
           const isLast = index === items.length - 1
 
           return (
-            <li key={index} className="flex items-center space-x-2">
-              {/* Separator */}
+            <li key={index} className="flex items-center">
+              {/* Separator: Thay đổi thành mũi tên nhỏ (Chevron) tinh tế hơn */}
               <svg
-                className="w-4 h-4 text-gray-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+                className="h-4 w-4 text-gray-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
                 aria-hidden="true"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
 
               {/* Item */}
-              {isLast || !item.href ? (
-                <span
-                  className={cn(
-                    'font-medium',
-                    isLast ? 'text-gray-900' : 'text-gray-500'
-                  )}
-                  aria-current={isLast ? 'page' : undefined}
-                >
-                  {item.label}
-                </span>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  {item.label}
-                </Link>
-              )}
+              <div className="ml-1 sm:ml-2">
+                {isLast || !item.href ? (
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded-md text-sm transition-colors',
+                      isLast
+                        ? 'font-semibold text-gray-900 cursor-default'
+                        : 'font-medium text-gray-500'
+                    )}
+                    aria-current={isLast ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </span>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="block rounded-md px-2 py-1 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </div>
             </li>
           )
         })}

@@ -14,10 +14,8 @@ export const quoteSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  projectType: z.enum(['residential', 'commercial', 'industrial', 'renovation'], {
-    required_error: 'Please select a project type',
-    invalid_type_error: 'Invalid project type',
-  }),
+  // projectType vẫn giữ nguyên vì đây là input từ form khách hàng, không nhất thiết phải khớp ID category
+  projectType: z.string().min(1, 'Please select a project type'), 
 
   location: z.string().min(5, 'Location must be at least 5 characters'),
   area: z.number().positive('Area must be greater than 0').optional(),
@@ -30,13 +28,18 @@ export const quoteSchema = z.object({
 export const projectSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
-  category: z.enum(['residential', 'commercial', 'industrial', 'renovation']),
+  category: z.string().min(1, 'Category is required'), 
   location: z.string().min(5, 'Location must be at least 5 characters'),
   area: z.number().positive().optional(),
   duration: z.string().optional(),
   client: z.string().optional(),
-  status: z.enum(['draft', 'published']),
+  status: z.enum(['draft', 'published', 'archived']),
   featured: z.boolean(),
+  // FIX: Thêm validation cho images
+  images: z.array(z.object({
+    url: z.string().url(),
+    order: z.number().int()
+  })).optional()
 })
 
 // Service Schema (Admin)
@@ -74,16 +77,18 @@ export const settingsSchema = z.object({
 
 // Quote Status Update Schema (Admin)
 export const updateQuoteStatusSchema = z.object({
-  status: z.enum(['new', 'viewed', 'processed'], {
-    message: 'Status must be new, viewed, or processed',
+  // FIX 3: Cập nhật đúng trạng thái mới trong DB
+  status: z.enum(['new', 'contacted', 'closed'], {
+    message: 'Status must be new, contacted, or closed',
   }),
   adminNote: z.string().max(1000, 'Admin note must be maximum 1000 characters').optional(),
 })
 
 // Contact Status Update Schema (Admin)
 export const updateContactStatusSchema = z.object({
-  status: z.enum(['unread', 'read'], {
-    message: 'Status must be unread or read',
+  // Có thể thêm 'replied' nếu muốn hỗ trợ đủ
+  status: z.enum(['unread', 'read', 'replied'], {
+    message: 'Status must be unread, read or replied',
   }),
 })
 
@@ -97,7 +102,7 @@ export const reorderServicesSchema = z.object({
   ).min(1, 'At least one service is required'),
 })
 
-// 
+// Image Reorder Schema
 export const reorderImagesSchema = z.object({
   images: z.array(
     z.object({
@@ -123,8 +128,14 @@ export const updatePasswordSchema = z.object({
   message: 'Passwords do not match',
   path: ['confirmPassword'],
 })
-
+export const categorySchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  description: z.string().optional().or(z.literal('')),
+  order: z.number().int().default(0),
+  active: z.boolean().default(true),
+})
 // Type Exports
+export type CategoryFormData = z.infer<typeof categorySchema>
 export type ContactFormData = z.infer<typeof contactSchema>
 export type QuoteFormData = z.infer<typeof quoteSchema>
 export type ProjectFormData = z.infer<typeof projectSchema>

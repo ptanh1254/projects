@@ -5,17 +5,33 @@ import { serviceSchema } from '@/lib/validations'
 import { slugify, generateUniqueSlug } from '@/lib/utils'
 import { deleteCloudinaryImage } from '@/lib/cloudinary'
 
-// GET single service by ID
+// Helper lấy Public ID từ URL Cloudinary
+function getPublicIdFromUrl(url: string): string {
+  try {
+    const parts = url.split('/upload/')
+    if (parts.length < 2) return 'unknown'
+    const subParts = parts[1].split('/')
+    subParts.shift()
+    const filenameWithExt = subParts.join('/')
+    return filenameWithExt.split('.')[0]
+  } catch (e) {
+    return 'unknown'
+  }
+}
+
+// GET: Lấy chi tiết Service
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
+
     const service = await prisma.service.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!service) {
@@ -35,21 +51,23 @@ export async function GET(
   }
 }
 
-// PUT update service
+// PUT: Cập nhật Service
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
     const body = await request.json()
+    
+    // Validate dữ liệu
     const validatedData = serviceSchema.parse(body)
 
     const existingService = await prisma.service.findUnique({
-      where: { id: params.id },
-      select: { title: true, slug: true },
+      where: { id },
     })
 
     if (!existingService) {
@@ -59,14 +77,31 @@ export async function PUT(
       )
     }
 
+    // Xử lý Slug nếu Title thay đổi
     let slug = existingService.slug
     if (existingService.title !== validatedData.title) {
       const baseSlug = slugify(validatedData.title)
-      slug = await generateUniqueSlug(baseSlug, params.id, 'service')
+      slug = await generateUniqueSlug(baseSlug, id, 'service')
     }
 
+    // Xử lý xóa ảnh cũ trên Cloudinary nếu người dùng thay ảnh mới
+    if (
+      existingService.imageUrl && 
+      validatedData.imageUrl && 
+      existingService.imageUrl !== validatedData.imageUrl &&
+      existingService.imageUrl.includes('cloudinary')
+    ) {
+      try {
+        const publicId = getPublicIdFromUrl(existingService.imageUrl)
+        await deleteCloudinaryImage(publicId)
+      } catch (err) {
+        console.error('Error deleting old service image:', err)
+      }
+    }
+
+    // Cập nhật DB
     const service = await prisma.service.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...validatedData,
         slug,
@@ -88,13 +123,6 @@ export async function PUT(
       )
     }
 
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      )
-    }
-
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A service with this slug already exists' },
@@ -109,55 +137,19 @@ export async function PUT(
   }
 }
 
-// PATCH partial update (for toggling active status)
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const auth = await checkAdminAuth()
-  if (!auth.authorized) return auth.response
-
-  try {
-    const body = await request.json()
-
-    const service = await prisma.service.update({
-      where: { id: params.id },
-      data: body,
-    })
-
-    return NextResponse.json({
-      success: true,
-      service,
-      message: 'Service updated successfully',
-    })
-  } catch (error: any) {
-    console.error('Error updating service:', error)
-
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update service' },
-      { status: 500 }
-    )
-  }
-}
-
-// DELETE service
+// DELETE: Xóa Service
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
+
     const service = await prisma.service.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!service) {
@@ -167,10 +159,10 @@ export async function DELETE(
       )
     }
 
-    // Delete image from Cloudinary if it exists
+    // Xóa ảnh trên Cloudinary nếu có
     if (service.imageUrl && service.imageUrl.includes('cloudinary')) {
       try {
-        const publicId = service.imageUrl.split('/').slice(-2).join('/').split('.')[0]
+        const publicId = getPublicIdFromUrl(service.imageUrl)
         await deleteCloudinaryImage(publicId)
       } catch (err) {
         console.error('Error deleting service image from Cloudinary:', err)
@@ -178,7 +170,7 @@ export async function DELETE(
     }
 
     await prisma.service.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({
@@ -187,14 +179,6 @@ export async function DELETE(
     })
   } catch (error: any) {
     console.error('Error deleting service:', error)
-
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Failed to delete service' },
       { status: 500 }

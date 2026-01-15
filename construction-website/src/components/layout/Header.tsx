@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils' // Import đúng từ file utils.ts
+import MobileMenu from './MobileMenu'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -18,6 +19,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('') // Add email state
   const [logoUrl, setLogoUrl] = useState('')
   const [companyName, setCompanyName] = useState('GTS Việt Nam')
   const pathname = usePathname()
@@ -30,6 +32,7 @@ export default function Header() {
         if (res.ok) {
           const data = await res.json()
           setPhone(data.phone || '')
+          setEmail(data.email || '') // Fetch email
           setLogoUrl(data.logoUrl || '')
           setCompanyName(data.companyName || 'GTS Việt Nam')
         }
@@ -75,6 +78,7 @@ export default function Header() {
                   src={logoUrl}
                   alt={companyName}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-contain"
                   priority
                 />
@@ -182,42 +186,14 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile menu */}
-        <div 
-          className={cn(
-            "lg:hidden absolute top-full left-0 w-full transition-all duration-300 ease-in-out transform origin-top shadow-xl",
-            mobileMenuOpen ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-0 -translate-y-2 pointer-events-none"
-          )}
-        >
-          <div className="bg-white border-t border-gray-100 p-4">
-            <nav className="flex flex-col space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'px-4 py-2.5 rounded-lg text-base font-semibold transition-colors flex items-center justify-between',
-                    isActive(item.href)
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                  {isActive(item.href) && <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
-                </Link>
-              ))}
-              <div className="h-px bg-gray-100 my-2" />
-              <Link
-                href="/quote"
-                className="w-full py-3 mt-1 bg-blue-600 text-white rounded-lg font-bold text-sm text-center hover:bg-blue-700 transition-all shadow-md uppercase tracking-wide"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get a Quote
-              </Link>
-            </nav>
-          </div>
-        </div>
+        {/* Mobile menu - Imported Component */}
+        <MobileMenu 
+          isOpen={mobileMenuOpen} 
+          onClose={() => setMobileMenuOpen(false)} 
+          navigation={navigation} 
+          phone={phone} // Pass phone
+          email={email} // Pass email
+        />
       </div>
     </header>
   )

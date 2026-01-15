@@ -13,6 +13,7 @@ export async function GET() {
           orderBy: { order: 'asc' },
           take: 1,
         },
+        categoryData: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 6,

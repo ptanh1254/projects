@@ -5,22 +5,42 @@ import { projectSchema } from '@/lib/validations'
 import { slugify, generateUniqueSlug } from '@/lib/utils'
 import { deleteCloudinaryImage } from '@/lib/cloudinary'
 
-// GET single project by ID
+// Helper lấy Public ID từ URL Cloudinary
+function getPublicIdFromUrl(url: string): string {
+  try {
+    const parts = url.split('/upload/')
+    if (parts.length < 2) return 'unknown'
+    const subParts = parts[1].split('/')
+    subParts.shift()
+    const filenameWithExt = subParts.join('/')
+    return filenameWithExt.split('.')[0]
+  } catch (e) {
+    return 'unknown'
+  }
+}
+
+// GET: Lấy chi tiết dự án
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  // FIX: Định nghĩa params là Promise để tương thích Next.js 15
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Check admin authentication
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    // FIX: Await params trước khi lấy id
+    const { id } = await params
+
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         images: {
           orderBy: { order: 'asc' },
         },
+        categoryData: {
+          select: { id: true, name: true, slug: true }
+        }
       },
     })
 
@@ -41,24 +61,25 @@ export async function GET(
   }
 }
 
-// PUT update project
+// PUT: Cập nhật dự án
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  // FIX: Định nghĩa params là Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Check admin authentication
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    // FIX: Await params
+    const { id } = await params
+    
     const body = await request.json()
-
-    // Validate input
     const validatedData = projectSchema.parse(body)
+    const { images, ...projectData } = validatedData
 
-    // Check if project exists
     const existingProject = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { title: true, slug: true },
     })
 
@@ -69,56 +90,67 @@ export async function PUT(
       )
     }
 
-    // Generate new slug if title changed
     let slug = existingProject.slug
     if (existingProject.title !== validatedData.title) {
       const baseSlug = slugify(validatedData.title)
-      slug = await generateUniqueSlug(baseSlug, params.id, 'project')
+      slug = await generateUniqueSlug(baseSlug, id, 'project')
     }
 
-    // Update project
-    const project = await prisma.project.update({
-      where: { id: params.id },
-      data: {
-        ...validatedData,
-        slug,
-      },
-      include: {
-        images: {
-          orderBy: { order: 'asc' },
+    // Transaction để update project và images
+    const updatedProject = await prisma.$transaction(async (tx) => {
+      // 1. Update Project info
+      const p = await tx.project.update({
+        where: { id },
+        data: {
+          ...projectData,
+          slug,
         },
-      },
+      })
+
+      // 2. Update Images (nếu có gửi lên)
+      if (images) {
+        // Xóa ảnh cũ trong DB
+        await tx.image.deleteMany({
+          where: { projectId: id }
+        })
+
+        // Tạo ảnh mới
+        if (images.length > 0) {
+          await tx.image.createMany({
+            data: images.map(img => ({
+              url: img.url,
+              publicId: getPublicIdFromUrl(img.url),
+              order: img.order,
+              projectId: id
+            }))
+          })
+        }
+      }
+
+      return p
+    })
+
+    // Fetch lại data đầy đủ để trả về Frontend
+    const result = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { order: 'asc' } },
+        categoryData: { select: { id: true, name: true, slug: true } }
+      }
     })
 
     return NextResponse.json({
       success: true,
-      project,
+      project: result,
       message: 'Project updated successfully',
     })
   } catch (error: any) {
     console.error('Error updating project:', error)
 
-    // Zod validation errors
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Invalid data', details: error.errors },
         { status: 400 }
-      )
-    }
-
-    // Prisma record not found
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
-    }
-
-    // Prisma unique constraint violation
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'A project with this slug already exists' },
-        { status: 409 }
       )
     }
 
@@ -129,19 +161,21 @@ export async function PUT(
   }
 }
 
-// DELETE project
+// DELETE: Xóa dự án
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  // FIX: Định nghĩa params là Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Check admin authentication
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
-    // Fetch project with all images
+    // FIX: Await params
+    const { id } = await params
+
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { images: true },
     })
 
@@ -152,26 +186,19 @@ export async function DELETE(
       )
     }
 
-    // Delete images from Cloudinary
-    const cloudinaryErrors: string[] = []
+    // Xóa ảnh trên Cloudinary
     for (const image of project.images) {
       try {
         await deleteCloudinaryImage(image.publicId)
       } catch (err) {
         console.error(`Failed to delete image ${image.publicId} from Cloudinary:`, err)
-        cloudinaryErrors.push(image.publicId)
       }
     }
 
-    // Delete project from database (cascade will delete images)
+    // Xóa project trong DB (Cascade sẽ tự xóa record Image)
     await prisma.project.delete({
-      where: { id: params.id },
+      where: { id },
     })
-
-    // Log Cloudinary errors but still consider it a success
-    if (cloudinaryErrors.length > 0) {
-      console.warn('Some images failed to delete from Cloudinary:', cloudinaryErrors)
-    }
 
     return NextResponse.json({
       success: true,
@@ -179,15 +206,6 @@ export async function DELETE(
     })
   } catch (error: any) {
     console.error('Error deleting project:', error)
-
-    // Prisma record not found
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Failed to delete project' },
       { status: 500 }

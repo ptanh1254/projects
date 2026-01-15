@@ -5,9 +5,23 @@ import { projectSchema } from '@/lib/validations'
 import { slugify, generateUniqueSlug } from '@/lib/utils'
 import { Prisma } from '@prisma/client'
 
-// GET all projects with pagination and filtering
+// Hàm helper để lấy publicId từ URL Cloudinary
+function getPublicIdFromUrl(url: string): string {
+  try {
+    // Tách public ID từ URL (VD: .../upload/v12345/folder/image.jpg -> folder/image)
+    const parts = url.split('/upload/')
+    if (parts.length < 2) return 'unknown'
+    const subParts = parts[1].split('/')
+    subParts.shift() // bỏ version (v12345)
+    const filenameWithExt = subParts.join('/')
+    return filenameWithExt.split('.')[0]
+  } catch (e) {
+    return 'unknown'
+  }
+}
+
+// GET all projects (Giữ nguyên logic cũ đã sửa)
 export async function GET(request: Request) {
-  // Check admin authentication
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
@@ -19,15 +33,14 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    // Build where clause
     const where: Prisma.ProjectWhereInput = {}
 
     if (status !== 'all') {
-      where.status = status as 'draft' | 'published'
+      where.status = status as 'draft' | 'published' | 'archived'
     }
 
     if (category !== 'all') {
-      where.category = category as any
+      where.category = category 
     }
 
     if (search) {
@@ -38,7 +51,6 @@ export async function GET(request: Request) {
       ]
     }
 
-    // Fetch projects with pagination
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
         where,
@@ -46,6 +58,9 @@ export async function GET(request: Request) {
           images: {
             orderBy: { order: 'asc' },
             take: 1,
+          },
+          categoryData: {
+            select: { id: true, name: true, slug: true }
           },
           _count: {
             select: { images: true },
@@ -73,27 +88,34 @@ export async function GET(request: Request) {
   }
 }
 
-// POST create new project
+// POST create new project (FIX MẤT ẢNH)
 export async function POST(request: Request) {
-  // Check admin authentication
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
     const body = await request.json()
-
-    // Validate input
+    // Validation bao gồm cả images
     const validatedData = projectSchema.parse(body)
 
-    // Generate slug from title
     const baseSlug = slugify(validatedData.title)
     const uniqueSlug = await generateUniqueSlug(baseSlug, undefined, 'project')
 
-    // Create project
+    // Tách images ra khỏi data project
+    const { images, ...projectData } = validatedData
+
     const project = await prisma.project.create({
       data: {
-        ...validatedData,
+        ...projectData,
         slug: uniqueSlug,
+        // FIX: Xử lý lưu ảnh ngay khi tạo project
+        images: {
+          create: images?.map((img) => ({
+            url: img.url,
+            publicId: getPublicIdFromUrl(img.url),
+            order: img.order
+          })) || []
+        }
       },
       include: {
         images: true,
@@ -108,7 +130,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error creating project:', error)
 
-    // Zod validation errors
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Invalid data', details: error.errors },
@@ -116,11 +137,18 @@ export async function POST(request: Request) {
       )
     }
 
-    // Prisma unique constraint violation
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A project with this slug already exists' },
         { status: 409 }
+      )
+    }
+
+    // Lỗi P2003 thường do Category ID không tồn tại
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Invalid Category ID. Please check if category exists.' },
+        { status: 400 }
       )
     }
 

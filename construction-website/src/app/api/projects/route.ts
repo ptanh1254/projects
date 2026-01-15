@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { Prisma } from '@prisma/client'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -13,7 +14,9 @@ export async function GET(request: Request) {
     }
 
     if (category && category !== 'all') {
-      where.category = category
+      where.categoryData = {
+        slug: category
+      }
     }
 
     const projects = await prisma.project.findMany({
@@ -21,8 +24,9 @@ export async function GET(request: Request) {
       include: {
         images: {
           orderBy: { order: 'asc' },
-          take: 1, // Only get first image for list
+          take: 1, 
         },
+        categoryData: true, 
       },
       orderBy: { createdAt: 'desc' },
       take: limit ? parseInt(limit) : undefined,

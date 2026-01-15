@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server'
 import { checkAdminAuth } from '@/lib/admin-auth'
 import prisma from '@/lib/db'
+import { categorySchema } from '@/lib/validations' // Đảm bảo đã thêm schema này
 import { slugify, generateUniqueSlug } from '@/lib/utils'
 
-// GET single category
+// GET: Lấy chi tiết Category
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params cho Next.js 15
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
+
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!category) {
@@ -33,28 +36,23 @@ export async function GET(
   }
 }
 
-// PUT update category
+// PUT: Cập nhật Category
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
     const body = await request.json()
-    const { name, description, order, active } = body
-
-    if (!name || name.trim().length < 2) {
-      return NextResponse.json(
-        { error: 'Category name must be at least 2 characters' },
-        { status: 400 }
-      )
-    }
+    
+    // Validate bằng Zod
+    const validatedData = categorySchema.parse(body)
 
     const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id },
-      select: { name: true, slug: true },
+      where: { id },
     })
 
     if (!existingCategory) {
@@ -64,20 +62,21 @@ export async function PUT(
       )
     }
 
+    // Xử lý Slug nếu tên thay đổi
     let slug = existingCategory.slug
-    if (existingCategory.name !== name.trim()) {
-      const baseSlug = slugify(name)
-      slug = await generateUniqueSlug(baseSlug, params.id, 'category')
+    if (existingCategory.name !== validatedData.name) {
+      const baseSlug = slugify(validatedData.name)
+      slug = await generateUniqueSlug(baseSlug, id, 'category')
     }
 
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: {
-        name: name.trim(),
+        name: validatedData.name,
         slug,
-        description: description || null,
-        order: order || 0,
-        active: active !== undefined ? active : true,
+        description: validatedData.description || null,
+        order: validatedData.order,
+        active: validatedData.active,
       },
     })
 
@@ -89,6 +88,13 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating category:', error)
 
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Invalid data', details: error.errors },
+        { status: 400 }
+      )
+    }
+
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A category with this name already exists' },
@@ -96,13 +102,6 @@ export async function PUT(
       )
     }
 
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Category not found' },
-        { status: 404 }
-      )
-    }
-
     return NextResponse.json(
       { error: 'Failed to update category' },
       { status: 500 }
@@ -110,55 +109,31 @@ export async function PUT(
   }
 }
 
-// PATCH partial update (for toggling active status)
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const auth = await checkAdminAuth()
-  if (!auth.authorized) return auth.response
-
-  try {
-    const body = await request.json()
-
-    const category = await prisma.category.update({
-      where: { id: params.id },
-      data: body,
-    })
-
-    return NextResponse.json({
-      success: true,
-      category,
-      message: 'Category updated successfully',
-    })
-  } catch (error: any) {
-    console.error('Error updating category:', error)
-
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Category not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update category' },
-      { status: 500 }
-    )
-  }
-}
-
-// DELETE category
+// DELETE: Xóa Category
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // FIX: Promise params
 ) {
   const auth = await checkAdminAuth()
   if (!auth.authorized) return auth.response
 
   try {
+    const { id } = await params // FIX: Await params
+
+    // Kiểm tra xem Category có đang được sử dụng trong Project nào không
+    const projectsCount = await prisma.project.count({
+      where: { category: id }
+    })
+
+    if (projectsCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot delete category. It is used in ${projectsCount} projects.` },
+        { status: 400 }
+      )
+    }
+
     await prisma.category.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({
