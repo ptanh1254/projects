@@ -71,9 +71,9 @@ export default function FeaturedProjects() {
   }, [])
 
   // Helper function to get category name
-  const getCategoryName = (categorySlug: string) => {
-    const cat = categories.find((c) => c.slug === categorySlug)
-    return cat?.name || categorySlug
+  const getCategoryName = (categoryID: string) => {
+    const cat = categories.find((c) => c.id === categoryID)
+    return cat?.name || categoryID
   }
 
   if (loading) {
